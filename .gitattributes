@@ -1,0 +1,4 @@
+* text=auto
+bundles/** -text -diff
+model/data/i5/national_2025/** -text -diff
+service/shared/hermes-complete.html -text -diff

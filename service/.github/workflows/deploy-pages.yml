@@ -1,0 +1,56 @@
+name: Deploy current model dashboard
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python scripts/check_mock_data.py
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - run: npm test
+        working-directory: frontend
+      - name: Require deployed model API
+        run: test -n "$VITE_MODEL_API_BASE_URL"
+        env:
+          VITE_MODEL_API_BASE_URL: ${{ vars.VITE_MODEL_API_BASE_URL }}
+      - run: npm run build
+        working-directory: frontend
+        env:
+          VITE_APP_MODE: final
+          VITE_MODEL_API_BASE_URL: ${{ vars.VITE_MODEL_API_BASE_URL }}
+          VITE_BASE_PATH: /service/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend/dist
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish
+        id: deployment
+        uses: actions/deploy-pages@v4

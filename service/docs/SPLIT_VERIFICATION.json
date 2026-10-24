@@ -1,0 +1,65 @@
+{
+  "verification_scope": "local repository split and relocation; no external model calls or deployment",
+  "package_installation": "model and agent editable installs succeeded without dependency downloads",
+  "checks": {
+    "model_unit": {
+      "passed": 7,
+      "total": 7
+    },
+    "agent_unit": {
+      "passed": 30,
+      "total": 30
+    },
+    "service_api": {
+      "passed": 54,
+      "total": 54
+    },
+    "frontend_unit": {
+      "passed": 18,
+      "total": 18
+    },
+    "frontend_build": {
+      "passed": true
+    },
+    "mock_public_data": {
+      "passed": true,
+      "dong_joins": 427
+    },
+    "rule_workflow_replay": {
+      "passed": 93,
+      "total": 93,
+      "executions": 12,
+      "model_called": false
+    },
+    "workflow_yaml_parse": {
+      "passed": true
+    },
+    "snapshot_export": {
+      "passed": true,
+      "survey_records": 50,
+      "mobility_records": 552,
+      "behavior_records": 417,
+      "measurement_values_preserved": true
+    },
+    "checkout_without_local_captures": {
+      "passed": 38,
+      "skipped": 16,
+      "skip_scope": "official capture integration only"
+    }
+  },
+  "limitations": [
+    "Historical model results are preserved, not retrained in this split.",
+    "Docker image and remote CI/Pages workflows have not been executed.",
+    "Full official captures stay local and Git-ignored."
+  ],
+  "historical_artifacts": {
+    "model": 275,
+    "omitted": 0,
+    "copied_bytes_sha256_verified": true
+  },
+  "staged_file_counts": {
+    "model": 313,
+    "agent": 66,
+    "service": 62
+  }
+}

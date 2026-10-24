@@ -1,0 +1,30 @@
+{
+  "as_of": "2026-10-03",
+  "files": {
+    "backend/app/__init__.py": "e6954d4c83ca9c519de8489760285a9ea8e47527e2a3b85d2bad2100dd50a238",
+    "backend/app/config.py": "c66820d74d0a2b1fa6e00682e2902100e893f6d89c419702515b3ccd4b3524fc",
+    "backend/app/data.py": "8f1e2c6730418554e73876baca8c3da6f7d944e90103981532ba6ca587ecf35a",
+    "backend/app/graph.py": "5a71c164c05ded1dc79eb6eb51bff7787d12d25c600b00e50a1ecb26dde3edd6",
+    "backend/app/main.py": "73da4eb0931117c098c2089f7fa47ddbde46da4155ce136dac0a5cead895ee09",
+    "backend/app/models.py": "c51ba1fa2e28f90f76fd0373dd39f55ab21487bbd39d25f9f2ed481b49b017ae",
+    "backend/app/research.py": "ae24528717eef2612b3507cd47a072b8492607868aef8783591e8f668c16a15b",
+    "backend/app/store.py": "bd8df2e6fdc0b9994f2573d1def35a31ba5094f0fb676eb7ee165a3f7ce60da3",
+    "backend/tests/conftest.py": "dd2f3139ce0e50a0111b7d0eb8d234b62a582b32b2f0f2cad68b207d850e1d3b",
+    "backend/tests/test_api.py": "f156515ed80fb7e524303c1976537bf7f7271a7c5d827a78a3a17d2f04d63d6d",
+    "backend/tests/test_graph.py": "14797eda1a8bf0b04b3700d84247e501293623de00c8185b35dfbae7a8e92cfb",
+    "backend/tests/test_research.py": "6904e7a4092a78e17ee310174fa093c6e0f528eb8531047acfd4d8c3dc542563",
+    "backend/tests/test_store.py": "17780d656616a0436233e0f52133b3386f278437ed654f578afcc99684a093a2",
+    "frontend/src/App.tsx": "759df367970b80ee3d658f597afa7db71b1183c66d6ea04688871d753148e69e",
+    "frontend/src/MapView.tsx": "5b6c68741427e6e313b31877e50a8bea774bc610ce22f9b70a66dce66ac185ec",
+    "frontend/src/MockApp.tsx": "567faf5574ac1ebd14d9614f098acc951085330ec3ffaad1132d2162e3a78097",
+    "frontend/src/ResearchApp.tsx": "465af8c79c266f1cdba3ca91d9c766fd0ffad979ac724452cb7a1dae20e5e169",
+    "frontend/src/engine.ts": "f744f6749029b6c56eb616717b2c4e3f307c11d38b0426b77e2579d9753eeda3",
+    "frontend/src/main.tsx": "81e56fd16994bc32f4baaed93b0d529187c4c77ce7f53c766fe4b2fff3ff5150",
+    "frontend/src/research.ts": "186ab27ce89e0aaa9859d99994536a38443285b56e2464660ce5a1754a921d29",
+    "frontend/src/styles.css": "484415f26fa6395de14c5dac5ed0472b7efb3abbc35d4760425fc8b8ddf88238",
+    "frontend/src/types.ts": "7caf0e010382ddcc66abccf92a50ae2f36632ab1cfdfbc14a7a57a872a966f01",
+    "frontend/tests/engine.test.ts": "2a80b446f4eb3ddf060180b70582827c663d5d7a5d1cf909c40f97b205af7806",
+    "frontend/tests/research.test.ts": "70c36d22da7f1b80711bb4f06b161e74b934014b8a222a5621fb785bd8b33499",
+    "shared/research/isolation_snapshot.json": "0c395f9e9f0b1287ba611e83cdd8985c948e7db165710a2f6b8d9b9eb088f0d9"
+  }
+}

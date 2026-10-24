@@ -1,0 +1,28 @@
+
+> donghaeng-observatory@0.1.0 test
+> vitest run
+
+
+ RUN  v3.2.7 /Users/yunjongseo/Documents/ChatGPT/빅콘테스트/service/frontend
+
+ ✓ tests/engine.test.ts (9 tests) 12ms
+ ✓ tests/research.test.ts (6 tests) 13ms
+
+ Test Files  2 passed (2)
+      Tests  15 passed (15)
+   Start at  18:03:28
+   Duration  275ms (transform 49ms, setup 0ms, collect 69ms, tests 25ms, environment 0ms, prepare 79ms)
+
+
+> donghaeng-observatory@0.1.0 build
+> tsc -b && vite build
+
+vite v6.4.3 building for production...
+transforming...
+✓ 1588 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.67 kB │ gzip:   0.46 kB
+dist/assets/index-DV8ZzAPo.css   37.43 kB │ gzip:  11.86 kB
+dist/assets/index-B0Iskzpy.js   430.93 kB │ gzip: 129.74 kB
+✓ built in 1.22s

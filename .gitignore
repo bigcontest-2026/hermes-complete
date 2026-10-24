@@ -1,0 +1,15 @@
+.env
+.env.*
+!.env.example
+**/.venv/
+**/node_modules/
+**/dist/
+**/__pycache__/
+**/.pytest_cache/
+**/*.pyc
+**/*.tsbuildinfo
+**/*.egg-info/
+runtime/
+*.sqlite*
+*.log
+.DS_Store
