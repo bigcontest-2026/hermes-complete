@@ -1,0 +1,435 @@
+/* Hermi: the supplied desktop chat concept, connected to the existing work pages. */
+body.hermi-desktop {
+  --bg: #f3f7fb;
+  --card: #fff;
+  --ink: #18314c;
+  --sub: #657b92;
+  --line: #dce6f0;
+  --blue: #2475e8;
+  --soft: #edf5ff;
+  --gold: #ffc85b;
+  --navy: #18314c;
+  --hermi-top: var(--hermes-header-height, 76px);
+  color: var(--ink);
+  background: var(--bg);
+  font-family: 'IBM Plex Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  font-size: 14px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+body.hermi-desktop :where(button, input, textarea, select) { font: inherit; }
+body.hermi-desktop [hidden] { display: none !important; }
+body.hermi-desktop :where(button, a, input, textarea, select):focus-visible {
+  outline: 3px solid #87b9fa;
+  outline-offset: 3px;
+}
+body.hermi-desktop :where(button) { transition: background-color .15s, border-color .15s, color .15s; }
+body.hermi-desktop :where(button:disabled) { cursor: not-allowed; opacity: .55; }
+body.hermi-desktop :where(h1, h2, h3) { color: var(--ink); }
+body.hermi-desktop :where(h1) { letter-spacing: -1.15px; }
+body.hermi-desktop :where(h2) { font-size: 20px; letter-spacing: -.55px; }
+body.hermi-desktop :where(h3) { font-size: 14px; letter-spacing: -.2px; }
+body.hermi-desktop :where(.small, .muted) { color: var(--sub); }
+
+body.hermi-desktop .top {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  height: auto;
+  min-height: 76px;
+  padding: 14px 28px;
+  gap: 30px;
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+  box-shadow: none;
+}
+body.hermi-desktop .top .logo {
+  gap: 9px;
+  padding: 0;
+  min-width: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+}
+body.hermi-desktop .logo-badge { width: 42px; height: 42px; background: transparent; border-radius: 0; box-shadow: none; }
+body.hermi-desktop .logo-badge img { display: block; width: 100%; height: 100%; object-fit: contain; }
+body.hermi-desktop .logo-title { font-size: 18px; font-weight: 700; letter-spacing: .6px; color: var(--blue); }
+body.hermi-desktop .logo-title em { font-size: 10px; margin-left: 5px; letter-spacing: 0; }
+body.hermi-desktop .logo-sub { font-size: 10px; margin-top: 4px; color: var(--sub); letter-spacing: 0; }
+body.hermi-desktop .hermi-brand-art { display: block; width: 42px; height: 42px; object-fit: contain; }
+body.hermi-desktop .hermi-wordmark { display: block; font-size: 18px; line-height: 1.3; font-weight: 700; letter-spacing: 1px; color: var(--blue); }
+body.hermi-desktop .hermi-wordmark small { display: block; margin-top: 3px; color: var(--sub); font-size: 9px; font-weight: 400; letter-spacing: .1px; }
+body.hermi-desktop .nav { justify-content: flex-start; gap: 4px; overflow-x: auto; }
+body.hermi-desktop .nav button { padding: 9px 12px; font-size: 12px; font-weight: 500; border-radius: 8px; color: var(--sub); }
+body.hermi-desktop .nav button:hover { color: var(--blue); background: #f5f9ff; }
+body.hermi-desktop .nav button.active { color: var(--blue); background: var(--soft); font-weight: 600; }
+body.hermi-desktop .nav button.active::after { display: none; }
+body.hermi-desktop .top-actions { gap: 8px; }
+body.hermi-desktop .mini-pill.green {
+  background: #f4f8fc;
+  color: var(--sub);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 6px 9px;
+  font-size: 10px;
+  font-weight: 500;
+}
+body.hermi-desktop #drawer,
+body.hermi-desktop #drawer-toggle,
+body.hermi-desktop > .notice { display: none; }
+
+body.hermi-desktop .hermi-workspace { width: 100%; min-width: 0; }
+body.hermi-desktop #page-agent { max-width: none; margin: 0; width: 100%; padding: 0; transition: none; }
+body.hermi-desktop #page-agent.history-open { padding-left: 0; padding-right: 0; }
+body.hermi-desktop.hermi-landing #page-agent { display: flex; min-height: calc(100dvh - var(--hermi-top)); height: auto; overflow: visible; }
+body.hermi-desktop.hermi-landing #hermi-work-panel { display: none; }
+body.hermi-desktop .agent-home {
+  width: min(800px, 100%);
+  max-width: 800px;
+  padding: 36px 26px 32px;
+  margin: auto;
+  text-align: center;
+}
+body.hermi-desktop .hermi-welcome-art { width: 148px; height: 148px; margin: 0 auto 8px; flex-shrink: 0; }
+body.hermi-desktop .hermi-welcome-art img { width: 100%; height: 100%; display: block; object-fit: contain; }
+body.hermi-desktop .hermi-greeting { margin: 0 0 8px; color: var(--sub); font-size: 12px; font-weight: 500; }
+body.hermi-desktop #agent-welcome h1 { font-size: 34px; line-height: 1.45; letter-spacing: -1.45px; font-weight: 700; margin: 0; }
+body.hermi-desktop #agent-welcome .prompt-sub { margin: 13px 0 0; font-size: 14px; line-height: 1.8; color: var(--sub); max-width: 600px; }
+body.hermi-desktop #agent-welcome .prompt-sub span { display: inline; }
+body.hermi-desktop #home-form {
+  margin-top: 26px;
+  width: 100%;
+  padding: 17px 18px 14px;
+  border: 1px solid #ceddeb;
+  border-radius: 18px;
+  background: var(--card);
+  box-shadow: 0 10px 30px #173b650a;
+  text-align: left;
+}
+body.hermi-desktop #home-form:focus-within { border-color: #82b2f3; box-shadow: 0 0 0 3px #2475e80b; }
+body.hermi-desktop #home-input { display: block; min-height: 76px; height: 76px; padding: 1px 2px; font-size: 14px; line-height: 1.8; color: var(--ink); resize: vertical; }
+body.hermi-desktop #home-input::placeholder { color: #7b8fa4; }
+body.hermi-desktop .start-scope { flex: 1; min-width: 0; width: auto; margin: 0; gap: 8px; justify-content: flex-start; font-size: 11px; }
+body.hermi-desktop .start-scope label { color: var(--sub); gap: 8px; font-size: 11px; }
+body.hermi-desktop .start-scope select { min-width: 130px; max-width: 230px; padding: 5px 9px; border: 1px solid var(--line); border-radius: 7px; color: #45627e; background: #f8fbff; font-size: 11px; }
+body.hermi-desktop .start-scope .scope-hint { color: #7c8fa3; font-size: 10px; }
+body.hermi-desktop .start-scope > label[hidden] { display: none; }
+body.hermi-desktop .hermi-dong-start { width: 100%; min-width: 0; }
+body.hermi-desktop .hermi-dong-selects { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+body.hermi-desktop .start-scope .hermi-dong-selects label { display: flex; flex-direction: column; align-items: stretch; gap: 4px; font-size: 10px; min-width: 0; }
+body.hermi-desktop .start-scope .hermi-dong-selects select { width: 100%; min-width: 0; max-width: none; }
+body.hermi-desktop .hermi-dong-selects select:disabled { color: #8191a3; background: #f1f5f9; }
+body.hermi-desktop .hermi-dong-status { display: block; margin-top: 6px; color: #6d8296; font-size: 10px; line-height: 1.5; }
+body.hermi-desktop .prompt-bottom { gap: 10px; align-items: center; }
+body.hermi-desktop .prompt-bottom .small { flex: 1; padding: 0; font-size: 10px; color: #8191a3; }
+body.hermi-desktop .send { min-width: 42px; height: 39px; padding: 0 14px; border-radius: 9px; background: var(--blue); color: #fff; font-size: 12px; font-weight: 600; border: 1px solid var(--blue); }
+body.hermi-desktop .send:hover { background: #1c64cc; border-color: #1c64cc; }
+body.hermi-desktop .send svg { width: 18px; height: 18px; display: block; }
+body.hermi-desktop #home-form .send { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 110px; flex-shrink: 0; white-space: nowrap; }
+body.hermi-desktop .evidence-strategy { max-width: 143px; padding: 5px 7px; font-size: 10px; border-color: var(--line); color: var(--sub); background: #fff; }
+body.hermi-desktop .examples { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; gap: 10px; margin-top: 15px; }
+body.hermi-desktop .example { display: flex; align-items: flex-start; gap: 9px; padding: 15px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fff; text-align: left; color: var(--ink); font-weight: 400; }
+body.hermi-desktop .example:hover { border-color: #a4c7f2; background: #f9fcff; }
+body.hermi-desktop .hermi-example-icon { width: 27px; height: 27px; flex: 0 0 27px; display: grid; place-items: center; color: var(--blue); background: var(--soft); border-radius: 7px; }
+body.hermi-desktop .hermi-example-icon svg { display: block; width: 16px; height: 16px; }
+body.hermi-desktop .hermi-example-copy { min-width: 0; }
+body.hermi-desktop .hermi-example-copy b { display: block; font-size: 12px; line-height: 1.65; font-weight: 600; }
+body.hermi-desktop .hermi-example-copy small { display: block; margin-top: 4px; color: var(--sub); font-size: 10px; line-height: 1.6; }
+body.hermi-desktop .hermi-home-note { width: 100%; margin-top: 22px; font-size: 11px; color: var(--sub); }
+body.hermi-desktop .hermi-home-note .evidence-api-bar { margin: 0 0 6px; font-size: 10px; color: #7b8fa3; }
+body.hermi-desktop .hermi-home-note .html-snapshot-info { margin: 0 auto; padding: 0; max-width: 620px; font-size: 11px; text-align: left; }
+body.hermi-desktop .hermi-home-note details { padding: 0; border: 0; border-radius: 0; background: transparent; }
+body.hermi-desktop .hermi-home-note summary { width: fit-content; margin: 0 auto; font-size: 10px; color: var(--sub); font-weight: 400; }
+body.hermi-desktop .hermi-home-note details[open] { padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+body.hermi-desktop .hermi-home-note details[open] summary { margin: 0 0 8px; }
+
+body.hermi-desktop.hermi-working { height: 100dvh; overflow: hidden; }
+body.hermi-desktop.hermi-working .hermi-workspace { display: grid; grid-template-columns: minmax(360px, .44fr) minmax(0, .56fr); height: calc(100dvh - var(--hermi-top)); min-height: 0; overflow: hidden; }
+body.hermi-desktop.hermi-working #page-agent { display: block; height: 100%; min-height: 0; min-width: 0; overflow: hidden; }
+body.hermi-desktop.hermi-working #agent-convo { width: 100%; max-width: none; height: 100%; padding: 18px 24px 20px; min-height: 0; }
+body.hermi-desktop.hermi-working #agent-convo.on { display: flex; }
+body.hermi-desktop .agent-convo-head { flex: 0 0 auto; min-height: 45px; gap: 12px; margin-bottom: 8px; padding: 0 0 12px; border-bottom: 1px solid var(--line); }
+body.hermi-desktop .agent-convo-head > div { min-width: 0; }
+body.hermi-desktop .hermi-chat-heading { display: flex; align-items: center; gap: 10px; min-width: 0; }
+body.hermi-desktop .hermi-chat-heading > img { display: block; width: 40px; height: 40px; object-fit: contain; flex: 0 0 40px; }
+body.hermi-desktop .hermi-chat-heading > div { min-width: 0; }
+body.hermi-desktop .agent-convo-head h2 { max-width: 100%; font-size: 13px; font-weight: 600; color: #49627c; letter-spacing: -.25px; }
+body.hermi-desktop .agent-convo-head .small { font-size: 10px; margin-top: 3px; color: #7a8ea4; }
+body.hermi-desktop .agent-convo-head .chat-saved-note { display: none; }
+body.hermi-desktop #new-chat { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; padding: 6px 8px; border-color: transparent; background: transparent; color: var(--sub); font-size: 11px; white-space: nowrap; }
+body.hermi-desktop #new-chat svg { width: 15px; height: 15px; }
+body.hermi-desktop #new-chat:hover { color: var(--blue); background: var(--soft); }
+body.hermi-desktop #agent-feed { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; gap: 22px; padding: 15px 4px 26px 0; scrollbar-width: thin; scrollbar-color: #cedce9 transparent; }
+body.hermi-desktop .bubble-row { gap: 10px; align-items: flex-start; min-width: 0; }
+body.hermi-desktop .bubble-row.mine { padding-left: 36px; }
+body.hermi-desktop .bubble { font-size: 13px; line-height: 1.85; min-width: 0; overflow-wrap: anywhere; }
+body.hermi-desktop .bubble.mine { max-width: 100%; padding: 12px 15px; border-radius: 14px 14px 3px 14px; color: var(--ink); background: #e8f1fc; }
+body.hermi-desktop .bubble.assistant { flex: 1; max-width: calc(100% - 42px); padding: 0; border: 0; background: transparent; border-radius: 0; box-shadow: none; }
+body.hermi-desktop .agent-mark { flex: 0 0 32px; min-width: 32px; width: 32px; height: 36px; margin-top: 2px; background: transparent; border-radius: 0; font-size: 0; }
+body.hermi-desktop .agent-mark img { display: block; width: 32px; height: 36px; object-fit: contain; }
+body.hermi-desktop .hermi-author { display: block; margin: 1px 0 8px; color: var(--blue); font-size: 12px; font-weight: 600; }
+body.hermi-desktop .bubble.assistant > p { margin: 8px 0; }
+body.hermi-desktop .bubble.assistant strong { font-size: 13px; }
+body.hermi-desktop .bubble.assistant :where(.answer-guide) { font-size: 13px; line-height: 1.85; }
+body.hermi-desktop .bubble.assistant .hermi-answer { margin: 14px 0 18px; }
+body.hermi-desktop .hermi-answer-title { margin: 0 0 10px; color: #244b72; font-size: 15px; font-weight: 700; }
+body.hermi-desktop .hermi-answer-body { max-width: 70ch; overflow-wrap: anywhere; }
+body.hermi-desktop .hermi-answer-body :where(p, ul, ol, pre) { margin: 10px 0; }
+body.hermi-desktop .hermi-answer-body :where(ul, ol) { padding-left: 22px; }
+body.hermi-desktop .hermi-answer-body li + li { margin-top: 5px; }
+body.hermi-desktop .hermi-answer-body h4 { margin: 17px 0 8px; font-size: 14px; color: #244b72; }
+body.hermi-desktop .hermi-answer-body > :first-child { margin-top: 0; }
+body.hermi-desktop .hermi-answer-body code { padding: 2px 5px; border-radius: 4px; background: #eaf1f8; font-size: 12px; }
+body.hermi-desktop .hermi-answer-body pre { overflow-x: auto; padding: 12px; border-radius: 8px; background: #eaf1f8; white-space: pre; }
+body.hermi-desktop .hermi-answer-body pre code { padding: 0; }
+body.hermi-desktop .bubble.assistant .evidence-module > .evidence-actions { display: flex; flex-wrap: wrap; padding-top: 12px; border-top: 1px solid #dce7f1; }
+body.hermi-desktop .bubble.assistant .evidence-module > .evidence-actions :where(button, a) { border-radius: 999px; padding: 8px 12px; text-decoration: none; }
+body.hermi-desktop .bubble.assistant :where(.evidence-module details, .answer-list article, .compare-card) { border-radius: 10px; padding: 13px; background: #fff; box-shadow: none; }
+body.hermi-desktop .bubble.assistant .evidence-compare { grid-template-columns: 1fr; gap: 10px; }
+body.hermi-desktop .bubble.assistant .evidence-compare > article { padding: 13px; background: #fff; }
+body.hermi-desktop .bubble.assistant .evidence-domains { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+body.hermi-desktop .bubble.assistant .evidence-domain { padding: 9px 7px; font-size: 10px; background: #edf4fb; }
+body.hermi-desktop .bubble.assistant .evidence-domain b { font-size: 14px; }
+body.hermi-desktop .bubble.assistant :where(.evidence-scroll, .live-scroll) { max-width: 100%; overflow-x: auto; }
+body.hermi-desktop .bubble.assistant :where(.evidence-actions, .response-actions) { gap: 6px; margin-top: 12px; }
+body.hermi-desktop .bubble.assistant :where(.evidence-actions button, .response-actions button) { padding: 7px 9px; font-size: 11px; color: #386ea6; border-color: #d4e2f1; border-radius: 8px; background: #fff; }
+body.hermi-desktop #agent-form { flex: 0 0 auto; gap: 10px; padding: 11px 11px 11px 15px; border: 1px solid #cdddeb; border-radius: 14px; background: #fff; box-shadow: 0 5px 18px #173b6505; }
+body.hermi-desktop #agent-form:focus-within { border-color: #82b2f3; }
+body.hermi-desktop #agent-input { min-width: 0; padding: 8px 0; min-height: 39px; font-size: 12px; line-height: 1.8; color: var(--ink); }
+body.hermi-desktop #agent-input::placeholder { color: #8294a6; }
+body.hermi-desktop #agent-form .send { height: 39px; font-size: 11px; padding: 0 11px; }
+body.hermi-desktop .hermi-composer-note { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 2px 0; flex: 0 0 auto; color: #8b9bad; font-size: 9px; line-height: 1.7; }
+body.hermi-desktop .hermi-chat-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; text-align: center; padding: 35px 20px; color: var(--sub); }
+body.hermi-desktop .hermi-chat-empty img { width: 100px; height: 100px; object-fit: contain; margin-bottom: 15px; }
+body.hermi-desktop .hermi-chat-empty h2 { font-size: 19px; margin-bottom: 10px; }
+body.hermi-desktop .hermi-chat-empty p { max-width: 290px; font-size: 12px; }
+
+body.hermi-desktop #hermi-work-panel { min-width: 0; height: 100%; overflow: auto; overscroll-behavior: contain; background: #fff; border-left: 1px solid var(--line); scrollbar-width: thin; scrollbar-color: #cddce9 transparent; }
+body.hermi-desktop .hermi-panel-header { position: sticky; top: 0; z-index: 20; padding: 19px 24px 15px; background: #fff; border-bottom: 1px solid var(--line); }
+body.hermi-desktop .hermi-panel-tabs { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
+body.hermi-desktop .hermi-panel-tabs button { padding: 7px 10px; background: #fff; color: var(--sub); border: 1px solid transparent; border-radius: 7px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+body.hermi-desktop .hermi-panel-tabs button:hover { color: var(--blue); border-color: var(--line); }
+body.hermi-desktop .hermi-panel-tabs button.active,
+body.hermi-desktop .hermi-panel-tabs button[aria-pressed='true'] { color: var(--blue); background: var(--soft); border-color: #d7e7fb; }
+body.hermi-desktop .hermi-panel-state { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 0 0 11px; font-size: 10px; color: #8395a7; }
+body.hermi-desktop .hermi-panel-state > span:first-child { color: #5b738b; font-weight: 500; }
+body.hermi-desktop #hermi-work-panel > .page { width: 100%; max-width: none; min-height: 0; height: auto; padding: 24px; margin: 0; background: #fff; }
+body.hermi-desktop #hermi-work-panel > .page:not(.active) { display: none; }
+body.hermi-desktop #hermi-work-panel > .page.active { display: block; }
+body.hermi-desktop #hermi-work-panel .page-head { margin-bottom: 18px; gap: 12px; }
+body.hermi-desktop #hermi-work-panel .page-head .section-label { display: none; }
+body.hermi-desktop #hermi-work-panel .page-head h1 { font-size: 24px; line-height: 1.45; letter-spacing: -.8px; }
+body.hermi-desktop #hermi-work-panel .page-head p { margin-top: 7px; font-size: 12px; line-height: 1.8; }
+body.hermi-desktop .hermi-work-empty { min-height: calc(100% - 110px); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 44px 30px 72px; text-align: center; color: var(--sub); }
+body.hermi-desktop .hermi-empty-art { display: block; width: 182px; height: 182px; object-fit: contain; margin: 0 0 20px; }
+body.hermi-desktop .hermi-work-empty h2 { font-size: 22px; line-height: 1.5; margin: 0 0 11px; }
+body.hermi-desktop .hermi-work-empty p { max-width: 350px; font-size: 12px; line-height: 1.9; }
+body.hermi-desktop .hermi-work-empty .btn { margin-top: 20px; }
+body.hermi-desktop .hermi-empty-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+body.hermi-desktop .hermi-work-empty > small { display: block; margin-top: 18px; color: #92a1b1; font-size: 10px; }
+body.hermi-desktop #hermi-work-panel :where(.live-filters) { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: 10px; margin: 16px 0 8px; }
+body.hermi-desktop #hermi-work-panel .live-filters label { min-width: 0; font-size: 10px; color: var(--sub); gap: 5px; }
+body.hermi-desktop #hermi-work-panel .live-filters select { width: 100%; min-width: 0; padding: 8px; font-size: 11px; border-color: var(--line); background: #fff; }
+body.hermi-desktop #hermi-work-panel .live-filters > .btn { min-height: 35px; padding: 8px; font-size: 10px; }
+body.hermi-desktop #hermi-work-panel .live-scope { font-size: 10px; line-height: 1.8; margin: 10px 0 20px; color: #7a8fa4; }
+body.hermi-desktop #hermi-work-panel .live-map-grid { grid-template-columns: minmax(145px, .8fr) minmax(0, 1.2fr); gap: 12px; }
+body.hermi-desktop #hermi-work-panel .live-map-grid > .panel:last-child { grid-column: 1 / -1; }
+body.hermi-desktop #hermi-work-panel .live-map-grid > .panel { padding: 14px; }
+body.hermi-desktop #hermi-work-panel .live-map-grid .evidence-domains { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+body.hermi-desktop #hermi-work-panel .live-map-svg { height: 350px; }
+body.hermi-desktop #hermi-work-panel .live-area-list { max-height: 350px; }
+body.hermi-desktop #hermi-work-panel .live-area { padding: 10px 2px; font-size: 11px; gap: 5px; }
+body.hermi-desktop #hermi-work-panel .live-area b { font-size: 11px; }
+body.hermi-desktop #hermi-work-panel .live-map-options { gap: 7px; }
+body.hermi-desktop #hermi-work-panel .live-map-options input { min-width: 0; max-width: 150px; font-size: 11px; }
+body.hermi-desktop #hermi-work-panel :where(.live-analysis-grid, .live-policy-grid) { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+body.hermi-desktop #hermi-work-panel .live-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+body.hermi-desktop #hermi-work-panel .live-stats .stat-card { background: var(--bg); border: 0; border-radius: 10px; padding: 15px; }
+body.hermi-desktop #hermi-work-panel .live-stats .stat-card b { font-size: 25px; margin-top: 5px; }
+body.hermi-desktop #hermi-work-panel .panel { border-radius: 11px; border-color: var(--line); box-shadow: none; }
+body.hermi-desktop #hermi-work-panel .live-panel { padding: 18px; }
+body.hermi-desktop #hermi-work-panel .live-panel > h2 { font-size: 16px; margin-bottom: 13px; }
+body.hermi-desktop #hermi-work-panel .live-panel p { font-size: 12px; line-height: 1.8; }
+body.hermi-desktop #hermi-work-panel .live-panel li { font-size: 12px; }
+body.hermi-desktop #hermi-work-panel :where(.live-scroll, .evidence-scroll) { max-width: 100%; overflow: auto; }
+body.hermi-desktop #hermi-work-panel .live-scroll .data-table { min-width: 560px; }
+body.hermi-desktop #hermi-work-panel .live-panel :where(th, td) { padding: 9px 7px; font-size: 11px; }
+body.hermi-desktop #hermi-work-panel .live-panel .evidence-domains { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+body.hermi-desktop #hermi-work-panel .evidence-domain { background: var(--soft); padding: 10px 7px; font-size: 10px; }
+body.hermi-desktop #hermi-work-panel .evidence-domain b { font-size: 14px; }
+body.hermi-desktop #hermi-work-panel .live-draft-grid { gap: 12px; }
+body.hermi-desktop #hermi-work-panel .live-draft-grid input { min-width: 0; width: 100%; font-size: 12px; }
+body.hermi-desktop #hermi-work-panel textarea { font-size: 12px; border-color: var(--line); line-height: 1.85; }
+body.hermi-desktop #hermi-work-panel :where(.live-loading, .live-empty) { padding: 18px; font-size: 12px; background: var(--bg); border-color: var(--line); border-radius: 10px; }
+body.hermi-desktop #hermi-work-panel :where(.live-meta, .evidence-meta) { font-size: 10px; line-height: 1.8; color: #8091a2; }
+body.hermi-desktop #hermi-work-panel .live-support { padding: 15px; border-color: var(--line); border-radius: 10px; }
+body.hermi-desktop #hermi-work-panel .live-support.chosen { border-color: #a5c8f3; background: #f3f8ff; }
+body.hermi-desktop #hermi-work-panel .live-support h3 { font-size: 14px; }
+body.hermi-desktop #hermi-work-panel .live-actions { margin: 13px 0; gap: 7px; }
+body.hermi-desktop #hermi-work-panel :where(.btn, .evidence-actions button, .evidence-actions a) { font-size: 11px; padding: 8px 11px; border-radius: 8px; }
+body.hermi-desktop #hermi-work-panel .btn.primary { background: var(--blue); color: #fff; }
+body.hermi-desktop #hermi-work-panel :where(.callout, .note) { background: var(--soft); color: #506f90; font-size: 12px; border-radius: 10px; padding: 13px; }
+body.hermi-desktop #hermi-work-panel .callout.gold { background: #fff6df; color: #89661f; }
+body.hermi-desktop #hermi-work-panel .badge { border-radius: 6px; font-size: 10px; padding: 3px 7px; }
+
+body.hermi-desktop #history-open-btn { position: absolute; top: 21px; left: 24px; z-index: 40; width: 34px; height: 31px; padding: 0; font-size: 0; border: 1px solid var(--line); background: #fff; border-radius: 7px; color: #65809b; }
+body.hermi-desktop #history-open-btn::before { content: '☰'; font-size: 15px; line-height: 1; }
+body.hermi-desktop .top-actions #history-open-btn { position: static; display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: auto; height: 32px; padding: 6px 9px; font-size: 11px; color: var(--sub); border: 1px solid var(--line); background: #fff; }
+body.hermi-desktop .top-actions #history-open-btn::before { content: none; }
+body.hermi-desktop .top-actions #history-open-btn svg { width: 15px; height: 15px; }
+body.hermi-desktop.hermi-landing #history-open-btn { top: 20px; left: 28px; }
+body.hermi-desktop .chat-history { position: absolute; top: 0; bottom: 0; left: 0; width: 270px; padding: 23px 16px; background: #f7faff; border-right: 1px solid var(--line); box-shadow: 10px 0 30px #173b650b; }
+body.hermi-desktop .history-open .history-overlay { display: block; position: absolute; inset: 0; z-index: 81; background: #19395822; }
+body.hermi-desktop .history-header { font-size: 13px; }
+body.hermi-desktop .history-new { font-size: 12px; border-radius: 8px; }
+body.hermi-desktop .history-entry { border-radius: 8px; padding: 10px; }
+body.hermi-desktop .history-title { font-size: 12px; }
+body.hermi-desktop .history-entry.active { background: #e8f1fd; color: var(--blue); }
+body.hermi-desktop .history-footer { font-size: 10px; }
+body.hermi-desktop .hermi-mobile-switch { display: none; }
+
+@media (min-width: 1600px) {
+  body.hermi-desktop.hermi-working #agent-convo { padding: 22px 36px 26px; }
+  body.hermi-desktop.hermi-working #history-open-btn { left: 36px; top: 25px; }
+  body.hermi-desktop #hermi-work-panel > .page { padding: 28px 32px; }
+  body.hermi-desktop .hermi-panel-header { padding: 20px 32px 16px; }
+  body.hermi-desktop .bubble { font-size: 14px; }
+}
+
+@media (min-width: 901px) and (max-width: 1120px) {
+  body.hermi-desktop .top { gap: 16px; padding: 13px 20px; }
+  body.hermi-desktop .nav button { padding: 8px; font-size: 11px; }
+  body.hermi-desktop .top-actions .mini-pill.green { display: none; }
+  body.hermi-desktop.hermi-working #agent-convo { padding-left: 18px; padding-right: 18px; }
+  body.hermi-desktop.hermi-working #history-open-btn { left: 18px; }
+  body.hermi-desktop #hermi-work-panel > .page { padding: 20px 18px; }
+  body.hermi-desktop .hermi-panel-header { padding-left: 18px; padding-right: 18px; }
+  body.hermi-desktop .hermi-panel-tabs { gap: 3px; }
+  body.hermi-desktop .hermi-panel-tabs button { font-size: 10px; padding: 7px 8px; }
+  body.hermi-desktop #hermi-work-panel .live-map-grid { grid-template-columns: minmax(0, 1fr); }
+  body.hermi-desktop #hermi-work-panel .live-map-grid > .panel:last-child { grid-column: auto; }
+  body.hermi-desktop #hermi-work-panel .live-area-list { max-height: 210px; }
+  body.hermi-desktop #hermi-work-panel .live-panel .evidence-domains { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 900px) {
+  body.hermi-desktop .top { padding: 12px 18px 9px; min-height: 70px; gap: 12px 18px; flex-wrap: wrap; }
+  body.hermi-desktop .top .logo { margin-right: auto; }
+  body.hermi-desktop .logo-badge { width: 35px; height: 35px; }
+  body.hermi-desktop .hermi-brand-art { width: 35px; height: 35px; }
+  body.hermi-desktop .hermi-wordmark { font-size: 16px; }
+  body.hermi-desktop .logo-title { font-size: 16px; }
+  body.hermi-desktop .logo-sub { font-size: 9px; }
+  body.hermi-desktop .nav { width: 100%; flex: 1 1 100%; order: 3; padding-bottom: 1px; }
+  body.hermi-desktop .nav button { padding: 7px 10px; font-size: 11px; }
+  body.hermi-desktop .top-actions { margin-left: auto; }
+  body.hermi-desktop .mini-pill.green { font-size: 9px; padding: 5px 7px; }
+  body.hermi-desktop .agent-home { padding: 34px 24px 30px; }
+  body.hermi-desktop .hermi-welcome-art { width: 128px; height: 128px; }
+  body.hermi-desktop #agent-welcome h1 { font-size: 30px; }
+  body.hermi-desktop #agent-welcome .prompt-sub { font-size: 12px; }
+  body.hermi-desktop.hermi-working .hermi-mobile-switch { display: flex; align-items: center; justify-content: center; gap: 5px; height: 46px; padding: 6px 18px; background: #fff; border-bottom: 1px solid var(--line); }
+  body.hermi-desktop .hermi-mobile-switch button { flex: 1; max-width: 240px; padding: 5px 12px; border: 1px solid transparent; border-radius: 7px; background: transparent; color: var(--sub); font-size: 11px; font-weight: 500; }
+  body.hermi-desktop .hermi-mobile-switch button.active,
+  body.hermi-desktop .hermi-mobile-switch button[aria-pressed='true'] { color: var(--blue); background: var(--soft); }
+  body.hermi-desktop.hermi-working .hermi-workspace { display: block; height: calc(100dvh - var(--hermi-top) - 46px); }
+  body.hermi-desktop.hermi-working #hermi-work-panel { display: none; border-left: 0; }
+  body.hermi-desktop.hermi-working[data-hermi-view='work'] #page-agent { display: none; }
+  body.hermi-desktop.hermi-working[data-hermi-view='work'] #hermi-work-panel { display: block; }
+  body.hermi-desktop.hermi-working #agent-convo { padding: 16px 22px 18px; }
+  body.hermi-desktop #history-open-btn { top: 19px; left: 22px; }
+  body.hermi-desktop .agent-convo-head h2 { max-width: 100%; }
+  body.hermi-desktop .bubble { font-size: 13px; }
+  body.hermi-desktop #hermi-work-panel > .page { padding: 22px; }
+  body.hermi-desktop .hermi-panel-header { padding: 14px 22px 12px; }
+  body.hermi-desktop .hermi-panel-state { font-size: 9px; margin-bottom: 9px; }
+  body.hermi-desktop .hermi-panel-tabs button { font-size: 11px; }
+  body.hermi-desktop .hermi-work-empty { padding-top: 30px; }
+  body.hermi-desktop .chat-history { width: min(290px, 85vw); }
+}
+
+@media (max-width: 560px) {
+  body.hermi-desktop .top { padding-left: 15px; padding-right: 15px; }
+  body.hermi-desktop .nav { gap: 2px; }
+  body.hermi-desktop .nav button { padding: 7px 8px; font-size: 10px; }
+  body.hermi-desktop .logo-title { font-size: 15px; }
+  body.hermi-desktop .hermi-wordmark { font-size: 15px; }
+  body.hermi-desktop .hermi-wordmark small { font-size: 8px; }
+  body.hermi-desktop .logo-sub { display: none; }
+  body.hermi-desktop .top-actions .mini-pill.green { display: none; }
+  body.hermi-desktop .agent-home { padding: 37px 18px 28px; }
+  body.hermi-desktop .hermi-welcome-art { width: 112px; height: 112px; margin-bottom: 6px; }
+  body.hermi-desktop .hermi-greeting { font-size: 11px; }
+  body.hermi-desktop #agent-welcome h1 { font-size: 28px; letter-spacing: -1.2px; }
+  body.hermi-desktop #agent-welcome .prompt-sub { max-width: 300px; font-size: 11px; line-height: 1.85; margin-top: 12px; }
+  body.hermi-desktop #home-form { padding: 14px; margin-top: 22px; border-radius: 15px; }
+  body.hermi-desktop #home-input { min-height: 68px; height: 68px; font-size: 12px; }
+  body.hermi-desktop .start-scope { display: flex; flex-wrap: wrap; margin-bottom: 0; }
+  body.hermi-desktop .start-scope label { font-size: 0; }
+  body.hermi-desktop .start-scope select { min-width: 120px; max-width: 155px; }
+  body.hermi-desktop .start-scope .scope-hint { display: none; }
+  body.hermi-desktop .prompt-bottom .small { display: none; }
+  body.hermi-desktop .prompt-bottom .send { margin-left: auto; }
+  body.hermi-desktop .examples { grid-template-columns: 1fr; gap: 8px; margin-top: 12px; }
+  body.hermi-desktop .example { align-items: center; padding: 12px; gap: 11px; }
+  body.hermi-desktop .hermi-example-copy b { font-size: 12px; }
+  body.hermi-desktop .hermi-example-copy small { margin-top: 2px; }
+  body.hermi-desktop .hermi-home-note { margin-top: 18px; }
+  body.hermi-desktop .hermi-home-note .evidence-api-bar { font-size: 9px; }
+  body.hermi-desktop.hermi-landing #history-open-btn { top: 12px; left: 16px; }
+  body.hermi-desktop.hermi-working #agent-convo { padding: 14px 16px 14px; }
+  body.hermi-desktop #history-open-btn { top: 16px; left: 16px; }
+  body.hermi-desktop .agent-convo-head { padding-left: 0; padding-bottom: 10px; gap: 7px; }
+  body.hermi-desktop .hermi-chat-heading { gap: 8px; }
+  body.hermi-desktop .hermi-chat-heading > img { width: 34px; height: 34px; flex-basis: 34px; }
+  body.hermi-desktop .agent-convo-head h2 { font-size: 12px; }
+  body.hermi-desktop .agent-convo-head .small { font-size: 9px; }
+  body.hermi-desktop #new-chat { font-size: 10px; padding: 5px; }
+  body.hermi-desktop #agent-feed { padding-top: 14px; gap: 21px; }
+  body.hermi-desktop .bubble-row { gap: 8px; }
+  body.hermi-desktop .bubble-row.mine { padding-left: 28px; }
+  body.hermi-desktop .bubble { font-size: 12px; }
+  body.hermi-desktop .bubble.assistant { max-width: calc(100% - 36px); }
+  body.hermi-desktop .agent-mark { flex-basis: 28px; min-width: 28px; width: 28px; }
+  body.hermi-desktop .agent-mark img { width: 28px; height: 32px; }
+  body.hermi-desktop .hermi-author { font-size: 11px; }
+  body.hermi-desktop #agent-form { padding: 9px 9px 9px 12px; gap: 8px; }
+  body.hermi-desktop #agent-input { font-size: 11px; }
+  body.hermi-desktop .hermi-composer-note { font-size: 8px; flex-wrap: wrap; gap: 0 8px; }
+  body.hermi-desktop #hermi-work-panel > .page { padding: 20px 16px; }
+  body.hermi-desktop .hermi-panel-header { padding: 12px 16px; }
+  body.hermi-desktop .hermi-panel-tabs { gap: 3px; }
+  body.hermi-desktop .hermi-panel-tabs button { padding: 6px 8px; font-size: 10px; }
+  body.hermi-desktop #hermi-work-panel .page-head h1 { font-size: 22px; }
+  body.hermi-desktop #hermi-work-panel .page-head p { font-size: 11px; }
+  body.hermi-desktop #hermi-work-panel .live-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+  body.hermi-desktop #hermi-work-panel .live-map-grid { grid-template-columns: minmax(0, 1fr); }
+  body.hermi-desktop #hermi-work-panel .live-map-grid > .panel:last-child { grid-column: auto; }
+  body.hermi-desktop #hermi-work-panel .live-area-list { max-height: 210px; }
+  body.hermi-desktop #hermi-work-panel .live-map-svg { height: 320px; }
+  body.hermi-desktop #hermi-work-panel .live-panel { padding: 15px; }
+  body.hermi-desktop #hermi-work-panel .live-panel .evidence-domains { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  body.hermi-desktop #hermi-work-panel .live-draft-grid { grid-template-columns: minmax(0, 1fr); }
+  body.hermi-desktop .hermi-empty-art { width: 150px; height: 150px; }
+  body.hermi-desktop .hermi-work-empty h2 { font-size: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.hermi-desktop *, body.hermi-desktop *::before, body.hermi-desktop *::after { scroll-behavior: auto; animation: none; transition: none; }
+}
+
+@media print {
+  body.hermi-desktop.live-print-report { height: auto; overflow: visible; background: #fff; }
+  body.hermi-desktop.live-print-report .hermi-workspace { display: block; height: auto; overflow: visible; }
+  body.hermi-desktop.live-print-report :is(.hermi-mobile-switch, .hermi-panel-header, .hermi-work-empty, #page-agent) { display: none !important; }
+  body.hermi-desktop.live-print-report #hermi-work-panel { display: block; height: auto; overflow: visible; border: 0; }
+  body.hermi-desktop.live-print-report #hermi-work-panel #page-records { display: block; padding: 0; height: auto; }
+  body.hermi-desktop.live-print-report #hermi-work-panel .panel { border: 0; box-shadow: none; }
+}
+/* Source identifiers remain available beneath the plain-language explanation. */
+.hermi-source-note { margin: 10px 0; padding: 8px 10px; border: 1px solid #e1eaf3; border-radius: 7px; color: #6a8096; font-size: 12px; }
+.hermi-source-note > summary { cursor: pointer; font-weight: 500; }
+.hermi-source-note > p { overflow-wrap: anywhere; }

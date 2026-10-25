@@ -109,11 +109,11 @@ export default function MockApp({ mode }: { mode: "mock" | "api" }) {
       try {
         if (!["mock", "api"].includes(mode))
           throw new Error(
-            "지원하지 않는 실행 모드입니다. mock 또는 api를 설정해 주세요.",
+            "이 화면을 열 수 없습니다. 현재 서비스 화면에서 다시 시작해 주세요.",
           );
         if (mode === "api" && !apiBase)
           throw new Error(
-            "API 주소가 설정되지 않았습니다. VITE_API_BASE_URL을 확인해 주세요.",
+            "서비스 연결 주소가 설정되지 않았습니다. 담당자에게 연결 상태를 확인해 주세요.",
           );
         const base = import.meta.env.BASE_URL;
         const responses = await Promise.all([
@@ -273,19 +273,19 @@ export default function MockApp({ mode }: { mode: "mock" | "api" }) {
             <div className="brand-line">
               동행 관측소 <span>지역을 살피고, 연결을 잇다</span>
             </div>
-            <p>서울특별시 지역 연결 지원 워크스페이스</p>
+            <p>서울특별시 지역 복지 검토</p>
           </div>
           <div className="header-meta">
-            <a href="?mode=final" className="mode-switch">현재 모델 자료 보기</a>
+            <a href="?mode=final" className="mode-switch">현재 서비스 화면 열기</a>
             <span className="demo-tag">공개 시연</span>
             <span className="mode-dot" />
-            {mode === "api" ? "API 연결 모드" : "브라우저 시연"}
+            {mode === "api" ? "연결된 서비스 자료" : "브라우저 시연"}
           </div>
         </header>
         <div className="disclaimer">
           <ShieldCheck size={16} />
           <span>
-            <strong>시연용 합성 데이터</strong> · 위험 지수와 정책은 가상이며,
+            <strong>기능 확인용 예시 자료</strong> · 위험 지수와 정책은 가상이며,
             실제 진단이나 정책 자격을 뜻하지 않습니다.
           </span>
           <button onClick={() => setHelp(!help)} aria-expanded={help}>
@@ -304,10 +304,10 @@ export default function MockApp({ mode }: { mode: "mock" | "api" }) {
               미만, 관심 40~69, 위험 70 이상으로 표시합니다.
             </p>
             <p>
-              실제 행정동 경계 위에 합성 지표를 표시합니다. 개인을 식별하거나
+              실제 행정동 경계 위에 예시 지표를 표시합니다. 개인을 식별하거나
               실제 지원을 접수하지 않습니다.{" "}
               {mode === "mock"
-                ? "관측 단계는 브라우저에서 시뮬레이션합니다."
+                ? "관측 단계는 화면 기능을 확인하기 위한 시연입니다."
                 : "서버가 반환한 실행 결과를 표시합니다. 연결 실패 시 오류가 표시됩니다."}
             </p>
           </section>
@@ -550,7 +550,7 @@ export default function MockApp({ mode }: { mode: "mock" | "api" }) {
                       <section className="detail-section">
                         <div className="section-title">
                           <h3>관측 지표</h3>
-                          <span>합성 데이터</span>
+                          <span>예시 자료</span>
                         </div>
                         {district.signals.map((signal) => (
                           <div className="signal" key={signal.key}>
@@ -583,7 +583,7 @@ export default function MockApp({ mode }: { mode: "mock" | "api" }) {
                           <h3>관측 실행 기록</h3>
                           <span>
                             {mode === "mock"
-                              ? "브라우저 시뮬레이션"
+                              ? "화면 기능 시연"
                               : "서버 실행 결과"}
                           </span>
                         </div>

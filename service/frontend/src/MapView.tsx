@@ -94,8 +94,8 @@ export default function MapView({
         const tooltip = document.createElement("div");
         tooltip.textContent = presentation ? presentation.tooltip(code) : research
           ? researchScope === "behavior"
-            ? `${d.district} ${d.name} · ${ageLabel} 행동 기반 고립지수 ${d.research_status === "held" ? "지수 보류" : scoreText(d.risk_score)}${d.risk_score === null ? "" : "점"} · ${observationPeriod} · 개인 확률 아님`
-            : `${d.district} ${d.name} · ${d.district} ${ageLabel} 조사값 ${d.research_status === "held" ? "지수 보류" : scoreText(d.risk_score)}${d.risk_score === null ? "" : "점"} (동별 값 아님)`
+            ? `${d.district} ${d.name} · ${ageLabel} 활동자료 참고점수 ${d.research_status === "held" ? "계산 보류" : scoreText(d.risk_score)}${d.risk_score === null ? "" : "점"} · ${observationPeriod} · 개인 확률 아님`
+            : `${d.district} ${d.name} · ${d.district} ${ageLabel} 조사값 ${d.research_status === "held" ? "계산 보류" : scoreText(d.risk_score)}${d.risk_score === null ? "" : "점"} (동별 값 아님)`
           : `${d.district} ${d.name} · ${levels[d.risk_level].label} ${d.risk_score === null ? "" : `${d.risk_score}점`}`;
         polygon.bindTooltip(tooltip, {
           sticky: selected !== code,
@@ -130,7 +130,7 @@ export default function MapView({
         ref={element}
         className="map-canvas"
         role="img"
-        aria-label={presentation?.ariaLabel ?? (research ? researchScope === "behavior" ? `서울 행정동별 행동 기반 고립지수 지도. ${ageLabel}, ${observationPeriod}. 개인의 고립확률이 아닙니다. 지역 선택은 왼쪽 목록에서도 가능합니다.` : "서울 자치구의 연령별 조사값을 행정동 경계 위에 반복 표시한 지도. 동별 고립점수가 아닙니다. 지역 선택은 왼쪽 목록에서도 가능합니다." : "서울 행정동별 시연 위험 지도. 지역 선택은 왼쪽 행정동 목록에서도 가능합니다.")}
+        aria-label={presentation?.ariaLabel ?? (research ? researchScope === "behavior" ? `서울 행정동별 활동자료 참고점수 지도. ${ageLabel}, ${observationPeriod}. 개인의 고립확률이 아닙니다. 지역 선택은 왼쪽 목록에서도 가능합니다.` : "서울 자치구의 연령별 조사값을 행정동 경계 위에 반복 표시한 지도. 동별 고립점수가 아닙니다. 지역 선택은 왼쪽 목록에서도 가능합니다." : "서울 행정동별 시연 위험 지도. 지역 선택은 왼쪽 행정동 목록에서도 가능합니다.")}
       />
       <button
         className="map-reset"
@@ -143,7 +143,7 @@ export default function MapView({
         {presentation?.resetLabel ?? "서울 전체 보기"}
       </button>
       <div className="map-note">
-        {presentation?.regionLabel ?? "서울특별시"} <span>{presentation?.note ?? (research ? researchScope === "behavior" ? "행정동 행동 대리지수" : "자치구 조사값 · 동별 값 아님" : "행정동 관측 지도")}</span>
+        {presentation?.regionLabel ?? "서울특별시"} <span>{presentation?.note ?? (research ? researchScope === "behavior" ? "행정동별 활동자료 참고점수" : "자치구 조사값 · 동별 값 아님" : "행정동 관측 지도")}</span>
       </div>
     </div>
   );

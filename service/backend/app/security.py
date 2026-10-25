@@ -1,6 +1,7 @@
 """Single-institution API boundary. Token issuance/SSO remains external to this service."""
 from dataclasses import dataclass
 from contextlib import closing
+import re
 import sqlite3
 
 import jwt
@@ -95,6 +96,12 @@ class AccessController:
         if method == "POST" and path.startswith("/api/investigations"):
             return "review" if path.rstrip("/").endswith(("/reviews", "/followups")) else "investigate"
         if method == "POST" and path == "/api/runs":
+            return "investigate"
+        if method == "POST" and (path.rstrip("/") == "/api/model/analysis-reports" or
+                                 re.fullmatch(r"/api/model/analysis-reports/[^/]+/investigate/?", path)):
+            return "investigate"
+        if ((method == "PUT" and re.fullmatch(r"/api/model/analysis-reports/[^/]+/response-workspace/?", path)) or
+                (method == "POST" and re.fullmatch(r"/api/model/analysis-reports/[^/]+/response-reports/?", path))):
             return "investigate"
         return "admin"
 

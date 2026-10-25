@@ -11,7 +11,7 @@ from .repository import now
 from .welfare_graph import build_welfare_graph
 
 EXECUTION_VERSION_FIELDS = ("snapshot_sha256", "support_manifest_sha256", "i5_manifest_sha256",
-                            "final_model_manifest_sha256", "tool_version", "graph_version", "prompt_version")
+                            "final_model_manifest_sha256", "tool_version", "graph_version", "prompt_version", "signal_rule_version")
 
 class InvestigationState(TypedDict, total=False):
     case_id: str
@@ -216,6 +216,7 @@ def build_investigation_graph(repo, tools, saver, welfare_request=None):
         case = repo.get(case_id)
         brief = {"schema_version": "investigation-brief-1.0", "case_id": case_id, "execution_id": eid,
                  "scope": state["measurements"]["scope"], "observations": state["measurements"]["observations"],
+                 "activity_assessments": state["measurements"].get("activity_assessments", []),
                  "support_candidates": candidates, "excluded_candidates": excluded, "open_questions": questions,
                  "next_actions": state["quality"]["actions"] + [{"type": "review_official_conditions", "reason": "개인 조건·접수 수용은 공식 창구 추가 확인", "evidence_ids": [e["evidence_id"] for e in evidence]}],
                  "evidence_ids": evidence_ids, "claims": [{"claim_id": "claim_" + o["kind"], "text": "인구구성 가중 I5 참고지수 확인" if o["kind"] in ("i5", "survey_i5_population_reference") else o["kind"] + " 공개 집계 관측 확인", "evidence_ids": [o["evidence_id"]]} for o in state["measurements"]["observations"]],

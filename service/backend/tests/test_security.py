@@ -152,3 +152,58 @@ def test_local_mode_is_identified_and_rejects_non_loopback_clients(evidence_sett
         assert response.headers["X-Hermes-Access-Mode"] == "local_development"
     with TestClient(create_app(evidence_settings), client=("203.0.113.10", 50000)) as client:
         assert client.get("/api/investigations").status_code == 403
+
+
+def test_analysis_report_permissions_and_tenant_binding(institution, signing_key):
+    settings = replace(institution, mode="final", survey_area_bundle=institution.i5_bundle_path)
+    with TestClient(create_app(settings)) as client:
+        scope = {"region_code": "11680", "month": "202512", "sex_code": "MAN", "age_code": "20G"}
+        path = "/api/model/analysis-reports"
+        assert client.post(path, json=scope).status_code == 401
+        assert client.post(path, json=scope, headers=headers(signing_key)).status_code == 403
+        result = client.post(path, json=scope, headers=headers(signing_key, ["investigate"]))
+        assert result.status_code == 200, result.text
+        report_id = result.json()["report_id"]
+        research_path = f"{path}/{report_id}/investigate"
+        assert client.post(research_path, json={}, headers=headers(signing_key)).status_code == 403
+        research = client.post(research_path, json={}, headers=headers(signing_key, ["investigate"]))
+        assert research.status_code == 503
+        assert research.json()["detail"]["code"] == "institution_provider_not_configured"
+        assert client.get(f"{path}/{report_id}", headers=headers(signing_key, ["investigate"])).status_code == 403
+        saved = client.get(f"{path}/{report_id}", headers=headers(signing_key))
+        assert saved.status_code == 200
+        assert saved.json()["operational_alert_allowed"] is False
+        assert client.get(path, headers=headers(signing_key, tenant_id="institution-b")).status_code == 401
+    with pytest.raises(ValueError, match="database_tenant_binding_mismatch"):
+        create_app(replace(settings, auth_tenant_id="institution-b"))
+    with pytest.raises(ValueError, match="database_tenant_binding_mismatch"):
+        create_app(replace(settings, access_mode="local_development"))
+
+
+def test_response_workspace_and_report_permissions(institution, signing_key):
+    settings = replace(institution, mode="final", survey_area_bundle=institution.i5_bundle_path)
+    with TestClient(create_app(settings)) as client:
+        investigator = headers(signing_key, ["read", "investigate"])
+        reader = headers(signing_key)
+        report = client.post("/api/model/analysis-reports", headers=investigator,
+                             json={"region_code": "11680", "month": "202512", "sex_code": "MAN", "age_code": "20G"}).json()
+        base = f"/api/model/analysis-reports/{report['report_id']}"
+        workspace_path, reports_path = base + "/response-workspace", base + "/response-reports"
+        assert client.get(workspace_path, headers=reader).status_code == 200
+        body = {"expected_version": 0, "plans": [{"plan_id": None, "kind": "new_program", "title": "담당자 검토안",
+                "target": "지역 주민", "content": "관측 근거를 확인한 뒤 참여 방식을 검토합니다.", "selected": True}]}
+        assert client.put(workspace_path, json=body, headers=reader).status_code == 403
+        saved = client.put(workspace_path, json=body, headers=investigator)
+        assert saved.status_code == 200, saved.text
+        workspace = saved.json()
+        selected = [{"plan_id": plan["plan_id"], "version": plan["version"]} for plan in workspace["plans"]]
+        selection = {"expected_workspace_version": workspace["version"], "selected_plan_versions": selected}
+        assert client.post(reports_path, json=selection, headers=reader).status_code == 403
+        created = client.post(reports_path, json=selection, headers=investigator)
+        assert created.status_code == 200, created.text
+        response_report = created.json()
+        assert client.get("/api/model/response-reports/" + response_report["report_id"], headers=reader).status_code == 200
+        assert response_report["analysis_report_id"] == report["report_id"]
+        assert response_report["operational_alert_allowed"] is False
+        preflight = client.options(workspace_path, headers={"Origin": "http://127.0.0.1:5173", "Access-Control-Request-Method": "PUT"})
+        assert preflight.status_code == 200 and "PUT" in preflight.headers["Access-Control-Allow-Methods"]

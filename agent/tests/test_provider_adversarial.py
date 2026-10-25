@@ -211,7 +211,7 @@ def test_whole_job_deadline_interrupts_during_model_callback(tmp_path, monkeypat
     assert not case["briefs"]
 
 
-@pytest.mark.parametrize("field", ["tool_version", "graph_version", "prompt_version"])
+@pytest.mark.parametrize("field", ["tool_version", "graph_version", "prompt_version", "signal_rule_version"])
 def test_changed_execution_component_version_is_blocked(tmp_path, monkeypatch, field):
     class ChangingVersions(SyntheticTools):
         def __init__(self):

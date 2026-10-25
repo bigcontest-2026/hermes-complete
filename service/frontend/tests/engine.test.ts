@@ -111,7 +111,7 @@ describe("API contract", () => {
       requestRun("http://localhost:8000", district.code, "normal"),
     ).rejects.toThrow("503");
     await expect(requestRun("", district.code, "normal")).rejects.toThrow(
-      "API",
+      "서비스 연결 주소가 설정되지 않았습니다",
     );
   });
   it("rejects incorrect held results", async () => {

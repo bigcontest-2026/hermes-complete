@@ -21,7 +21,8 @@ class State(TypedDict, total=False):
     review: dict
 
 
-def recovery_graph(repository, _tools, saver):
+def recovery_graph(repository, _tools, saver, *, welfare_request=None):
+    assert welfare_request is None
     def prepare(state):
         return {"brief": repository.put_brief(state["case_id"], state["execution_id"],
                 {"measurement_status": "held", "support_status": "needs_confirmation"})}

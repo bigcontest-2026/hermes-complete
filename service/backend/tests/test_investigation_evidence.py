@@ -57,9 +57,19 @@ def test_startup_and_distinct_geography_population_evidence(evidence_settings):
         assert activity["geography"] == {"spatial_unit": "sgg", "region_code": "11680",
                                          "scope_relation": "containing_region_context"}
         assert brief["quality_status"] == "hold" and brief["operational_alert_allowed"] is False
+        assessment = brief["activity_assessments"][0]
+        assert assessment["category"] == "joint_decline"
+        assert assessment["threshold_percent"] == 5
+        assert assessment["signals"]["two_month_streak"] is None
+        assert assessment["scope"]["region_code"] == "11680"
+        assert assessment["scope"]["age_code"] == "20G"
+        assert assessment["operational_alert_allowed"] is False
+        assert assessment["reasons"]
+        assert activity["signal_assessments"] == brief["activity_assessments"]
         assert brief["model_called"] is False
         version = saved["executions"][0]["versions"]
         assert version["i5_manifest_sha256"] and version["final_model_manifest_sha256"]
+        assert version["signal_rule_version"] == assessment["rule_version"]
 
 
 @pytest.mark.parametrize("changes", [

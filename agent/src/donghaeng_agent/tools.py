@@ -7,6 +7,7 @@ from pathlib import Path
 
 from .repository import RepositoryError, digest, now
 from .provider import PROMPT_VERSION
+from .signal_rules import SIGNAL_RULE_VERSION, classify_activity, previous_month
 from donghaeng_model.snapshot import load_research_snapshot
 
 
@@ -41,7 +42,8 @@ class InvestigationTools:
                 "support_manifest_sha256": hashlib.sha256(self.support_path.read_bytes()).hexdigest() if self.support_path.exists() else None,
                 "i5_manifest_sha256": self._manifest_hash(self.i5_bundle),
                 "final_model_manifest_sha256": self._manifest_hash(self.final_model_bundle),
-                "tool_version": "investigation-tools-2.1", "graph_version": "investigation-graph-2.0",
+                "tool_version": "investigation-tools-2.2", "graph_version": "investigation-graph-2.1",
+                "signal_rule_version": SIGNAL_RULE_VERSION,
                 "prompt_version": PROMPT_VERSION}
 
     @staticmethod
@@ -182,6 +184,7 @@ class InvestigationTools:
         version = hashlib.sha256(self.research_path.read_bytes()).hexdigest()
         region = self.resolve_region(request)
         observations, evidence = [], []
+        activity_assessments = []
 
         def add(kind, data, status, population, period, unit, limitations):
             eid = f"ev_{execution_id}_{kind}"
@@ -260,6 +263,12 @@ class InvestigationTools:
             # This is explicitly a parent-region context. Sex rows remain separate.
             result = self.get_final_behavior_evidence(region_code=region["parent_region_code"],
                      month=request["measurement_as_of"].replace("-", ""), age_code={"20대": "20G", "30대": "30G"}[request["age_group"]])
+            prior = self.get_final_behavior_evidence(region_code=region["parent_region_code"],
+                     month=previous_month(request["measurement_as_of"].replace("-", "")),
+                     age_code={"20대": "20G", "30대": "30G"}[request["age_group"]])
+            prior_by_sex = {item["behavior"]["key"]["sex_code"]: item["behavior"] for item in prior["records"]}
+            activity_assessments = [classify_activity(item["behavior"],
+                prior_by_sex.get(item["behavior"]["key"]["sex_code"])) for item in result["records"]]
             add("final_activity_context", result, "available" if result["records"] else "unavailable",
                 "원자료 성·연령별 관측장소 유동량·가맹점 결제 집계; 식별 주민 아님",
                 request["measurement_as_of"], "원본 단위·Q/H/T·변화율; 성별 행을 별도 유지",
@@ -271,10 +280,11 @@ class InvestigationTools:
                                            "scope_relation": "containing_region_context"},
                                 quality_status="hold", operational_alert_allowed=False)
             observations[-1].update(quality_status="hold", operational_alert_allowed=False,
-                                    geography=evidence[-1]["geography"])
+                                    geography=evidence[-1]["geography"], signal_assessments=activity_assessments)
         if source_versions != self.versions():
             raise ValueError("source_version_changed_during_measurement_read")
         return {"status": "ok", "scope": {**request, **region}, "observations": observations, "evidence": evidence,
+                "activity_assessments": activity_assessments,
                 "sk_mode": request["sk_mode"], "snapshot_version": version,
                 "source_versions": source_versions,
                 "quality_status": "hold", "operational_alert_allowed": False,
@@ -283,6 +293,10 @@ class InvestigationTools:
     def quality(self, measurements):
         actions, questions = [], []
         for obs in measurements["observations"]:
+            for assessment in obs.get("signal_assessments", []):
+                if assessment["category"] in ("single_source_decline", "joint_decline", "priority_review"):
+                    actions.append({"type": "check_context", "reason": assessment["category_label"] + ": " + " ".join(assessment["reasons"]),
+                                    "evidence_ids": [obs["evidence_id"]]})
             if obs["status"] != "available":
                 questions.append({"id": "quality_" + obs["kind"], "question": f"{obs['kind']}의 해당 지역·관측시점 근거를 추가 확보할 수 있습니까?", "evidence_ids": [obs["evidence_id"]]})
                 actions.append({"type": "request_measurement_evidence", "reason": obs["kind"] + " 근거 부족", "evidence_ids": [obs["evidence_id"]]})
@@ -296,6 +310,8 @@ class InvestigationTools:
                     actions.append({"type": "check_small_base", "reason": "7/8월 제공 유동량 기준평균 1000 미만: 절대량·거점 대표성 확인", "evidence_ids": [obs["evidence_id"]]})
                     questions.append({"id": "sk_small_base", "question": "작은 기초량에서의 변화율입니다. 관측 거점과 절대량을 함께 검토했습니까?", "evidence_ids": [obs["evidence_id"]]})
         return {"status": "partial" if questions else "ok", "actions": actions, "questions": questions,
+                "activity_rule_version": SIGNAL_RULE_VERSION,
+                "activity_assessments": measurements.get("activity_assessments", []),
                 "context_connector": "unavailable", "causal_claim_allowed": False,
                 "rule_config": {"change_absolute_pct": 10, "baseline_numeric_min": 1000, "validation_status": "development_inquiry_rules; not_validated_isolation_risk_cutoffs"}}
 

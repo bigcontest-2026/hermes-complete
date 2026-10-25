@@ -16,7 +16,7 @@ export default function App() {
   if (["final", "research", "research-api"].includes(mode)) return <CompleteHermes />;
   if (mode === "legacy") return <HermesApp />;
   if (mode === "mock" || mode === "api") return <MockApp mode={mode} />;
-  return <div className="full-state" role="alert"><h1>지원하지 않는 모드입니다</h1><p>final, mock 또는 api를 설정해 주세요.</p><a href="?mode=final">현재 모델 자료 보기</a></div>;
+  return <div className="full-state" role="alert"><h1>이 화면을 열 수 없습니다</h1><p>아래 링크에서 현재 서비스 화면을 열어 주세요.</p><a href="?mode=final">현재 서비스 화면 열기</a></div>;
 }
 
 function CompleteHermes() {
