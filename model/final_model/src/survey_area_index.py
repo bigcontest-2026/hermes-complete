@@ -13,6 +13,7 @@ import jsonschema
 
 from .common import dump, read_jsonl, sha, write_jsonl
 from .geography import region_registry, validate_region_code, availability
+from .i5_display import calculate_i5_display_score, REFERENCE_SCOPE, REFERENCE_VERSION
 
 FINAL = Path(__file__).resolve().parents[1]
 CONTRACT = "survey_area_isolation_index_v1"

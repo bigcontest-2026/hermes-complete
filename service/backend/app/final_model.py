@@ -187,6 +187,14 @@ class FinalModel:
                               next_offset=offset + limit if offset + limit < len(selected) else None,
                               availability=survey.availability(selected, filters.get("region_code"), filters.get("month")))
             result["availability"]["province_code"] = province_code
+            # Project verified raw measurements only after province filtering/paging.
+            # Keep source bundles and their hashes unchanged.
+            result["records"] = [
+                {**row, **survey.calculate_i5_display_score(row["isolation_index"])}
+                for row in result["records"]
+            ]
+            result["i5_display_reference_version"] = survey.REFERENCE_VERSION
+            result["i5_display_reference_scope"] = survey.REFERENCE_SCOPE
             return {**result, "run_id": manifest["run_id"]}
         return self.read("survey", read)
 

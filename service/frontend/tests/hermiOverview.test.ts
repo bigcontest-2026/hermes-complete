@@ -11,6 +11,8 @@ type Row = {
   population_20plus: Score;
   population_total: Score;
   i5_reference: Score;
+  i5_z?: Score;
+  i5_display_score?: Score;
   domain_scores?: Partial<Record<Domain, Score>>;
 };
 type Aggregate = {
@@ -19,6 +21,7 @@ type Aggregate = {
   population_20plus: number | null;
   population_total: number | null;
   i5_reference: number | null;
+  i5_display_score: number | null;
   domain_scores: Record<Domain, number | null>;
 };
 type Page = { run_id: string; records: unknown; next_offset?: number | null };
@@ -130,6 +133,15 @@ describe('Nationwide overview geography', () => {
 });
 
 describe('Nationwide overview weighted scores', () => {
+  it('weights the server z values before clipping a province display score', () => {
+    const result = data.aggregate([
+      {...row('11110', '종로구', {population_20plus: 100}), i5_z: -6, i5_display_score: 0},
+      {...row('11140', '중구', {population_20plus: 300}), i5_z: 2, i5_display_score: 7},
+    ]);
+    expect(result.i5_display_score).toBe(5);
+    expect(result.i5_reference).toBe(20);
+    expect(data.aggregate([row('11110', '종로구')]).i5_display_score).toBeNull();
+  });
   it('weights I5 and all five domains by adult population, not total population or row count', () => {
     const result = data.aggregate([
       row('11110', '종로구', { population_total: 900, population_20plus: '100' }),

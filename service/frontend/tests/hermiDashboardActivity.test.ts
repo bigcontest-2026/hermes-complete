@@ -9,6 +9,7 @@ type ActivityRow = {behavior: {key: {region_code: string; month: string; sex_cod
   activity_assessment: {category: string; category_label: string; reasons: string[]; [key: string]: unknown}};
 type ActivityResult = {records: ActivityRow[]; run_id: string; classification_rule: {rule_version: string; threshold_percent: number}};
 type DongRow = {area_code: string; area_name: string; region_code: string; region_name: string; spatial_unit: string; i5_reference: number;
+  i5_display_score?: number | null; i5_z?: number | null;
   population_total: number; population_20plus: number; domain_scores: Record<string, number>};
 const item = (region: string, month = '202512', category: keyof typeof categories = 'single_source_decline', age = '20G'): ActivityRow => {
   const key = {region_code: region, month, sex_code: 'MAN', age_code: age};
@@ -32,6 +33,11 @@ const dong = (code: string, name: string, i5: number, population = 100): DongRow
 const dongRows = [dong('1168051000', '신사동', 32.25), dong('1168052100', '논현1동', 36.75, 300),
   dong('1111051500', '청운효자동', 28.5, 200), dong('5111025000', '신북읍', 34.1, 400),
   dong('2611051000', '중앙동', 37.2), dong('2826075000', '아라1동', 35.3)];
+// Deliberately independent display values prove the dashboard consumes the server field.
+for (const [index, score] of [1.75, 6.75, 0.5, 4.1, 7.2, 5.3].entries()) {
+  dongRows[index].i5_display_score = score;
+  dongRows[index].i5_z = score - 5;
+}
 const feature = (code: string, name: string, x: number, y: number) => ({type: 'Feature',
   properties: {code, name, province_code: code.slice(0, 2), region_code: code.slice(0, 5), label: [x, y]},
   geometry: {type: 'Polygon', coordinates: [[[x - .01, y - .01], [x + .01, y - .01], [x + .01, y + .01], [x - .01, y + .01], [x - .01, y - .01]]]},
@@ -104,8 +110,8 @@ describe('Administrative dong dashboard', () => {
     expect(survey.every(url => url.searchParams.get('month') === '202512' && url.searchParams.get('limit') === '500')).toBe(true);
     expect(page.dashboard.innerHTML).toContain('<h1>행정동 대시보드</h1>'); expect(page.stats()).toHaveLength(3);
     expect(page.dashboard.innerHTML).not.toContain('선택 행정동 참고점수'); expect(page.stats()[0]).toContain('6<em>개</em>');
-    expect(page.region('1168051000')).toContain('<b>신사동</b>'); expect(page.region('1168051000')).toContain('<small>지역 고립 지수</small>32.25');
-    expect(page.region('1168052100')).toContain('<small>지역 고립 지수</small>36.75'); expect(page.region('1168051000')).not.toContain('ho-category-');
+    expect(page.region('1168051000')).toContain('<b>신사동</b>'); expect(page.region('1168051000')).toContain('<small>지역 고립 지수</small>1.75');
+    expect(page.region('1168052100')).toContain('<small>지역 고립 지수</small>6.75'); expect(page.region('1168051000')).not.toContain('ho-category-');
     expect(page.region('2826075000')).toContain('아라1동'); expect(page.section('ho-region-detail')).toContain('행정동을 선택해 주세요');
     expect(page.render).not.toHaveBeenCalled(); expect(page.load).toHaveBeenCalledExactlyOnceWith({month: '202512'});
     expect(page.loadBoundaries).toHaveBeenCalledTimes(1);
@@ -116,10 +122,21 @@ describe('Administrative dong dashboard', () => {
     page.click('data-ho-province', {hoProvince: '11'});
     expect(page.map()).toContain('서울특별시 행정동 지도'); expect(page.map().match(/<path\b/g)).toHaveLength(3);
     const shape = (code: string) => page.map().match(new RegExp(`<path[^>]*data-ho-region="${code}"[^>]*>`))?.[0] || '';
-    expect(shape('1168051000')).toContain('fill="#b9d7f7"'); expect(shape('1168052100')).toContain('fill="#438bdb"');
-    expect(shape('1111051500')).toContain('fill="#e5f0fc"'); expect(page.map()).toContain('신사동 · I5 32.25');
+    expect(shape('1168051000')).toContain('fill="#e5f0fc"'); expect(shape('1168052100')).toContain('fill="#438bdb"');
+    expect(shape('1111051500')).toContain('fill="#e5f0fc"'); expect(page.map()).toContain('신사동 · 지역 고립 지수 1.75');
+    expect(page.section('ho-map-panel')).toContain('4–6');
+    expect(page.section('ho-map-panel')).not.toContain('30 미만');
     expect(page.map()).not.toContain('#f3c87b'); expect(page.map()).not.toContain('data-ho-region="11680"');
     expect(page.map()).not.toContain('data-ho-region="5111025000"'); expect(page.section('ho-map-panel')).toContain('CC BY 4.0');
+  });
+  it('keeps a missing display score unknown instead of showing the raw score on the ten-point scale', async () => {
+    const page = harness(async () => result([]), {rows: () => dongRows.map(row => ({...row, i5_display_score: null, i5_z: null}))});
+    await page.view.show('dashboard');
+    expect(page.region('1168051000')).toContain('<small>지역 고립 지수</small>—');
+    page.click('data-ho-region', {hoRegion: '1168051000'});
+    expect(page.section('ho-region-detail')).toContain('—<small>/10</small>');
+    expect(page.map()).toContain('fill="#edf0f3"');
+    expect(page.section('ho-region-detail')).toContain('경제생활의 어려움');
   });
   it('drills from national to province to district to one dong and restores broader views', async () => {
     const page = harness(async () => result([item('11680'), item('51110')])); await page.view.show('dashboard');
@@ -133,7 +150,7 @@ describe('Administrative dong dashboard', () => {
     expect(page.map().match(/<path\b/g)).toHaveLength(1); expect(page.map()).not.toContain('data-ho-region="1168052100"');
     expect(page.map().match(/<path[^>]*data-ho-region="1168051000"[^>]*>/)?.[0]).not.toBe(previous);
     expect(page.section('ho-map-panel')).toContain('<span aria-current="location">신사동</span>');
-    expect(page.section('ho-region-detail')).toContain('32.25<small>/100</small>'); expect(page.section('ho-region-detail')).toContain('120명');
+    expect(page.section('ho-region-detail')).toContain('1.75<small>/10</small>'); expect(page.section('ho-region-detail')).toContain('120명');
     page.click('data-ho-district', {hoDistrict: '11680'}); expect(page.map().match(/<path\b/g)).toHaveLength(2);
     page.click('data-ho-province', {hoProvince: '11'}); expect(page.map().match(/<path\b/g)).toHaveLength(3);
     page.click('data-ho-province', {hoProvince: ''}); expect(page.map()).toContain('전국 행정동 탐색 지도');
@@ -158,7 +175,7 @@ describe('Administrative dong dashboard', () => {
     expect(page.map()).not.toContain('data-ho-region="2826074000"'); expect(page.map()).not.toContain('data-ho-region="28260"');
     page.click('data-ho-region', {hoRegion: '2826075000'}); expect(page.map()).toBe('');
     expect(page.section('ho-map-panel')).toContain('이 행정동의 지도 경계는 준비 중이에요');
-    expect(page.section('ho-region-detail')).toContain('<h2>아라1동</h2>'); expect(page.section('ho-region-detail')).toContain('35.30<small>/100</small>');
+    expect(page.section('ho-region-detail')).toContain('<h2>아라1동</h2>'); expect(page.section('ho-region-detail')).toContain('5.30<small>/10</small>');
     expect(page.section('ho-region-detail')).toContain('이 상위 시군구·월의 활동 자료가 없습니다');
     expect(page.section('ho-region-detail')).not.toContain('기준 이상 감소 미포착');
   });
@@ -178,7 +195,7 @@ describe('Administrative dong dashboard', () => {
     const page = harness(async () => result([item('11680')]), {boundaries: async () => {throw new Error('경계 연결 실패');}});
     await page.view.show('dashboard'); page.click('data-ho-province', {hoProvince: '11'});
     expect(page.section('ho-map-panel')).toContain('행정동 경계를 불러오지 못했어요'); page.click('data-ho-region', {hoRegion: '1168051000'});
-    expect(page.section('ho-region-detail')).toContain('32.25<small>/100</small>'); expect(page.section('ho-region-detail')).toContain('단일 감소 관찰');
+    expect(page.section('ho-region-detail')).toContain('1.75<small>/10</small>'); expect(page.section('ho-region-detail')).toContain('단일 감소 관찰');
     expect(page.map()).toBe(''); expect(page.section('ho-map-panel')).toContain('data-ho-retry-map');
     page.loadBoundaries.mockResolvedValueOnce(boundaryFixture); page.click('data-ho-retry-map');
     await vi.waitFor(() => expect(page.map()).toContain('신사동 행정동 지도'));
@@ -186,7 +203,7 @@ describe('Administrative dong dashboard', () => {
   });
   it('escapes activity errors, keeps dong I5, and retries activity without reloading reference data', async () => {
     const page = harness(async () => {throw new Error('활동 연결 실패 <script>alert(1)</script>');}); await page.view.show('dashboard');
-    page.click('data-ho-region', {hoRegion: '1168051000'}); expect(page.section('ho-region-detail')).toContain('32.25<small>/100</small>');
+    page.click('data-ho-region', {hoRegion: '1168051000'}); expect(page.section('ho-region-detail')).toContain('1.75<small>/10</small>');
     expect(page.section('ho-region-detail')).toContain('조회 실패'); expect(page.section('ho-region-detail')).toContain('&lt;script&gt;');
     expect(page.section('ho-region-detail')).not.toContain('<script>'); expect(page.stats()[1]).toContain('—<em>개 지역</em>');
     const reads = page.fetch.mock.calls.length; page.load.mockResolvedValueOnce(result([item('11680')])); page.click('data-ho-retry-activity');
@@ -196,16 +213,18 @@ describe('Administrative dong dashboard', () => {
   it('shows dongs during activity loading, ignores stale months and reuses completed activity cache', async () => {
     const december = deferred<ActivityResult>(), october = deferred<ActivityResult>();
     const page = harness(({month}) => month === '202512' ? december.promise : october.promise,
-      {rows: month => dongRows.map(row => ({...row, i5_reference: row.i5_reference + (month === '202510' ? 1 : 0)}))});
+      {rows: month => dongRows.map(row => ({...row, i5_reference: row.i5_reference + (month === '202510' ? 1 : 0),
+        i5_display_score: row.i5_display_score! + (month === '202510' ? 1 : 0),
+        i5_z: row.i5_z! + (month === '202510' ? 1 : 0)}))});
     const initial = page.view.show('dashboard'); await vi.waitFor(() => expect(page.region('1168051000')).toContain('신사동'));
     page.click('data-ho-region', {hoRegion: '1168051000'}); expect(page.section('ho-region-detail')).toContain('불러오는 중');
-    expect(page.section('ho-region-detail')).toContain('32.25<small>/100</small>'); page.month('202510');
+    expect(page.section('ho-region-detail')).toContain('1.75<small>/10</small>'); page.month('202510');
     await vi.waitFor(() => expect(page.load).toHaveBeenCalledWith({month: '202510'})); october.resolve(result([item('11680', '202510', 'joint_decline')]));
     await vi.waitFor(() => expect(page.section('ho-region-detail')).toContain('동시 감소 관찰'));
-    expect(page.section('ho-region-detail')).toContain('33.25<small>/100</small>'); december.resolve(result([item('11680', '202512', 'no_threshold_decline')]));
+    expect(page.section('ho-region-detail')).toContain('2.75<small>/10</small>'); december.resolve(result([item('11680', '202512', 'no_threshold_decline')]));
     await initial; expect(page.dashboard.innerHTML).toContain('<option value="202510" selected>'); expect(page.section('ho-region-detail')).toContain('동시 감소 관찰');
     page.month('202512'); await vi.waitFor(() => expect(page.section('ho-region-detail')).toContain('기준 이상 감소 미포착'));
-    expect(page.section('ho-region-detail')).toContain('32.25<small>/100</small>'); expect(page.load).toHaveBeenCalledTimes(2); expect(page.loadBoundaries).toHaveBeenCalledTimes(1);
+    expect(page.section('ho-region-detail')).toContain('1.75<small>/10</small>'); expect(page.load).toHaveBeenCalledTimes(2); expect(page.loadBoundaries).toHaveBeenCalledTimes(1);
   });
   it('preserves the full ten-digit scope for chat and the dong-specific saved report library', async () => {
     const page = harness(async () => result([item('11680')])); await page.view.show('dashboard'); page.click('data-ho-region', {hoRegion: '1168051000'});
