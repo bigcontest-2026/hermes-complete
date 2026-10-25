@@ -18,13 +18,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     application.add_middleware(
         CORSMiddleware, allow_origins=list(settings.cors_origins),
-        allow_credentials=False, allow_methods=["GET"], allow_headers=["Content-Type", "Authorization"],
+        allow_credentials=False, allow_methods=["GET", "POST", "PUT"], allow_headers=["Content-Type", "Authorization"],
     )
     from .security import install_security
     install_security(application, settings)
     application.include_router(model_router(settings))
     from .welfare_api import welfare_router
     application.include_router(welfare_router(settings))
+    from .welfare_chat_api import welfare_chat_router
+    application.include_router(welfare_chat_router(settings))
+    from .analysis_api import analysis_router
+    application.include_router(analysis_router(settings))
+    from .response_api import response_router
+    application.include_router(response_router(settings))
     return application
 
 

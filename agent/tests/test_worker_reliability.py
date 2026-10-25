@@ -161,7 +161,10 @@ class DummyGraph:
 
 
 def dummy_worker(monkeypatch, repo, tmp_path, invoke, **kwargs):
-    monkeypatch.setattr(worker_module, "build_investigation_graph", lambda *args: DummyGraph(invoke))
+    def build_dummy(*args, welfare_request=None):
+        assert welfare_request is None
+        return DummyGraph(invoke)
+    monkeypatch.setattr(worker_module, "build_investigation_graph", build_dummy)
     return InvestigationWorker(repo, None, tmp_path / "checkpoint.sqlite3", **kwargs)
 
 
@@ -238,7 +241,8 @@ class State(TypedDict, total=False):
     review: dict
 
 
-def review_graph(repo, _tools, saver):
+def review_graph(repo, _tools, saver, *, welfare_request=None):
+    assert welfare_request is None
     def prepare(state):
         repo.tool_result(state["execution_id"], "once", "fixture_read", {}, lambda: {"ok": True})
         return {"brief": repo.put_brief(state["case_id"], state["execution_id"], {
@@ -424,7 +428,8 @@ def test_tool_trace_reports_cache_hit_without_recording_payload(monkeypatch, rep
 def test_langgraph_checkpoint_executor_inherits_lease_fence(monkeypatch, repo, tmp_path):
     _, execution_id = queued(repo)
     replacement_job = []
-    def stale_graph(repository, _tools, saver):
+    def stale_graph(repository, _tools, saver, *, welfare_request=None):
+        assert welfare_request is None
         def slow_node(_state):
             with repository.connection() as db:
                 db.execute("UPDATE jobs SET lease_until=0 WHERE execution_id=?", (execution_id,))

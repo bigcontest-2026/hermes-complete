@@ -190,7 +190,7 @@ export async function requestRun(
 ): Promise<RunResult> {
   if (!base)
     throw new Error(
-      "API 주소가 설정되지 않았습니다. VITE_API_BASE_URL을 확인해 주세요.",
+      "서비스 연결 주소가 설정되지 않았습니다. 담당자에게 연결 상태를 확인해 주세요.",
     );
   const response = await fetch(`${base.replace(/\/$/, "")}/api/runs`, {
     method: "POST",
@@ -200,7 +200,7 @@ export async function requestRun(
   });
   if (!response.ok)
     throw new Error(
-      `관측 실행에 실패했습니다 (HTTP ${response.status}). 서버 상태를 확인한 뒤 다시 실행해 주세요.`,
+      `관측 결과를 불러오지 못했습니다 (오류 ${response.status}). 잠시 후 다시 시도해 주세요.`,
     );
   const run = (await response.json()) as RunResult;
   if (
@@ -217,7 +217,7 @@ export async function requestRun(
         run.risk_score > 100))
   )
     throw new Error(
-      "서버 응답 형식이 올바르지 않습니다. API 계약을 확인해 주세요.",
+      "불러온 결과 형식이 맞지 않습니다. 다시 시도하거나 담당자에게 문의해 주세요.",
     );
   if (
     (run.status === "held" || scenario === "missing_data") &&

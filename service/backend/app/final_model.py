@@ -116,6 +116,10 @@ class FinalModel:
             raise ModelUnavailable(family, "bundle_invalid") from exc
 
     def behavior(self, **filters):
+        from donghaeng_agent.signal_rules import (
+            SIGNAL_RULE_VERSION, THRESHOLD_PERCENT, classify_activity, previous_month,
+        )
+
         def read(root, manifest, query, survey, common, validators):
             result = query.query(root, **filters)
             rows = common.read_jsonl(root / "behavior_evidence.jsonl")
@@ -126,13 +130,26 @@ class FinalModel:
                 if row["record_id"] in ids:
                     raise ValueError("duplicate_historical_key")
                 ids.add(row["record_id"])
-            keys = set()
+            by_key = {}
             for row in rows:
                 validators["behavior"].validate(row)
                 key = tuple(row["key"][k] for k in ("region_code", "month", "sex_code", "age_code"))
-                if key in keys or row["historical_reference_id"] is not None and row["historical_reference_id"] not in ids:
+                if key in by_key or row["historical_reference_id"] is not None and row["historical_reference_id"] not in ids:
                     raise ValueError("invalid_behavior_key_or_history")
-                keys.add(key)
+                by_key[key] = row
+            # Use the full verified bundle for continuity, even when this page
+            # filters out the preceding month. The original model flags remain
+            # untouched; candidate_only still refers to that original contract.
+            for item in result["records"]:
+                row = item["behavior"]
+                key = row["key"]
+                identity = tuple(key[name] for name in ("region_code", "month", "sex_code", "age_code"))
+                if by_key.get(identity) != row:
+                    raise ValueError("behavior_changed_during_query")
+                prior = by_key.get((key["region_code"], previous_month(key["month"]), key["sex_code"], key["age_code"]))
+                item["activity_assessment"] = classify_activity(row, previous_behavior=prior)
+            result["classification_rule"] = {"rule_version": SIGNAL_RULE_VERSION, "threshold_percent": THRESHOLD_PERCENT}
+            result["manifest_sha256"] = common.sha(root / "manifest.json")
             return result
         return self.read("activity", read)
 

@@ -7,7 +7,7 @@ export interface ModelRegions {
 }
 export const months = ["202507", "202508", "202509", "202510", "202511", "202512"];
 export const ages = { "20G": "20대", "30G": "30대", "40G": "40대", "50G": "50대", "60GU": "60세 이상" } as const;
-export const domains = { E: "경제", P: "단체 참여", O: "외출", C: "교류", U: "지원 관계" } as const;
+export const domains = { E: "경제생활의 어려움", P: "모임·단체 참여 부족", O: "드문 외출", C: "가족·주변 사람과 교류 부족", U: "도움을 부탁할 관계 부족" } as const;
 export interface SurveyArea {
   schema_version: "survey_area_isolation_index_v1";
   record_id: string; month: string; spatial_unit: "sgg" | "administrative_dong";
@@ -70,20 +70,20 @@ export function mapSurvey(geo: Boundaries, rows: SurveyArea[]) {
 
 export function validatePage<T>(data: ModelPage<T>, contract: string): ModelPage<T> {
   if (data.contract_version !== contract || data.operational_alert_allowed !== false || !Array.isArray(data.records))
-    throw new Error("현재 모델의 응답 형식을 확인해 주세요.");
+    throw new Error("불러온 자료 형식이 맞지 않습니다. 다시 불러오거나 담당자에게 문의해 주세요.");
   if (contract === "survey_area_isolation_index_v1") {
     for (const row of data.records as SurveyArea[]) {
       if (row.schema_version !== contract || row.local_survey_measured !== false || row.behavior_signals_included !== false
           || row.local_survey_n_valid !== null || row.operational_alert_allowed !== false
           || !Number.isFinite(row.isolation_index) || row.isolation_index < 0 || row.isolation_index > 100
           || row.isolation_index !== row.i5_reference)
-        throw new Error("I5 참고지수의 측정 계약이 일치하지 않습니다.");
+        throw new Error("지역 고립 참고점수의 계산 기준을 확인할 수 없습니다. 담당자에게 자료 확인을 요청해 주세요.");
     }
   } else {
     for (const row of data.records as BehaviorRecord[]) {
       if (row.behavior?.contract_version !== contract || row.behavior.spatial_unit !== "sgg"
           || row.behavior.quality.status !== "hold" || row.behavior.operational_alert_allowed !== false)
-        throw new Error("활동변화의 측정 계약이 일치하지 않습니다.");
+        throw new Error("활동 변화 자료의 계산 기준을 확인할 수 없습니다. 담당자에게 자료 확인을 요청해 주세요.");
     }
   }
   return data;
@@ -95,7 +95,7 @@ export async function fetchModel<T>(path: string, params: Record<string, string>
   try { response = await fetch(`${apiBase}/api/model/${path}?${new URLSearchParams(params)}`, { signal }); }
   catch (error) {
     if (signal.aborted) throw error;
-    throw new Error("조회 서버에 연결할 수 없습니다. 서버 실행 상태를 확인한 뒤 다시 불러오세요.");
+    throw new Error("조회 서버에 연결할 수 없습니다. 잠시 후 다시 불러오거나 담당자에게 연결 상태를 문의해 주세요.");
   }
   if (!response.ok) {
     if (response.status === 503) throw new Error("검증된 자료가 아직 준비되지 않았습니다. 자료 연결 상태를 확인한 뒤 다시 불러오세요.");
@@ -112,7 +112,7 @@ export async function fetchModelPages<T>(path: string, params: Record<string, st
   let next = first.next_offset;
   let offset = Number(params.offset || 0);
   while (next !== null) {
-    if (next <= offset) throw new Error("자료의 페이지 순서를 확인해 주세요.");
+    if (next <= offset) throw new Error("자료를 순서대로 불러오지 못했습니다. 다시 불러와 주세요.");
     offset = next;
     const page = validatePage(await fetchModel<ModelPage<T>>(path, { ...params, offset: String(offset) }, signal), contract);
     if (page.run_id !== first.run_id || page.total_matched !== first.total_matched)

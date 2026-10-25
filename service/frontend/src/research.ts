@@ -97,7 +97,7 @@ export function validateSnapshot(value: unknown): ResearchSnapshot {
     || !data.survey.records.length || !Array.isArray(data.mobility.records)
     || !Array.isArray(data.mobility.periods) || !Array.isArray(data.sources)
     || !Array.isArray(data.limitations))
-    throw new Error("연구 자료의 형식이 올바르지 않습니다. 연구 스냅샷을 확인해 주세요.");
+    throw new Error("저장된 자료 형식이 맞지 않습니다. 담당자에게 자료 확인을 요청해 주세요.");
   const surveyKeys = new Set<string>();
   for (const record of data.survey.records) {
     const key = `${record.district}|${record.age_group}`;
@@ -110,7 +110,7 @@ export function validateSnapshot(value: unknown): ResearchSnapshot {
       || (record.score === null && (record.ci_low !== null || record.ci_high !== null))
       || (record.score !== null && (record.support_absence === null || record.loneliness === null
         || Math.abs(record.score - (record.support_absence + record.loneliness) / 2) > 0.11)))
-      throw new Error("자치구 & 연령별 조사값 또는 신뢰구간을 확인해 주세요.");
+      throw new Error("자치구·연령별 설문 결과나 추정 범위를 확인할 수 없습니다. 담당자에게 자료 확인을 요청해 주세요.");
     surveyKeys.add(key);
   }
   const mobilityKeys = new Set<string>();
@@ -123,7 +123,7 @@ export function validateSnapshot(value: unknown): ResearchSnapshot {
       || (record.flow_total === null && record.change_pct !== null)
       || !/^\d{10}$/.test(record.dong_code)
       || !record.quality || !Array.isArray(record.notes) || mobilityKeys.has(key))
-      throw new Error("행정동 & 연령 & 월별 유동량 또는 자료 품질을 확인해 주세요.");
+      throw new Error("행정동·연령·월별 유동인구 자료를 확인할 수 없습니다. 담당자에게 자료 확인을 요청해 주세요.");
     mobilityKeys.add(key);
   }
   if (data.paper_behavior_index) {
@@ -131,7 +131,7 @@ export function validateSnapshot(value: unknown): ResearchSnapshot {
     if (index.area_level !== "dong" || !/^\d{4}-\d{2}$/.test(index.period)
       || !index.population || !index.method || !index.normalization || !Array.isArray(index.records)
       || (index.full_paper_reproduction !== undefined && index.full_paper_reproduction !== false))
-      throw new Error("행동 기반 고립지수의 모집단과 계산 기준을 확인해 주세요.");
+      throw new Error("활동자료 참고점수의 대상과 계산 기준을 확인할 수 없습니다.");
     const keys = new Set<string>();
     for (const record of index.records) {
       const key = `${record.city}|${record.dong_code}|${record.age_group}|${record.period}`;
@@ -140,7 +140,7 @@ export function validateSnapshot(value: unknown): ResearchSnapshot {
         || record.age_group !== "20~39세" || record.period !== index.period
         || !bounded(record.score) || !parts.every(bounded) || !record.quality || !Array.isArray(record.notes)
         || keys.has(key) || (record.score !== null && parts.some((part) => part === null)))
-        throw new Error("행정동 행동지수의 연결키, 네 영역 또는 자료 품질을 확인해 주세요.");
+        throw new Error("행정동별 활동자료의 지역·기간·영역별 값이 맞지 않습니다. 담당자에게 자료 확인을 요청해 주세요.");
       keys.add(key);
     }
   }
@@ -188,7 +188,7 @@ export function activityChanges(data: ResearchSnapshot, city: string, age: AgeGr
 }
 export const scoreText = (value: number | null | undefined) => value == null ? "자료 없음" : value.toFixed(1);
 export const flowText = (value: number | null | undefined) => value == null ? "자료 없음" : value.toLocaleString("ko-KR", { maximumFractionDigits: 0 });
-export const qualityText = (value: string) => ({ adequate_descriptive_sample: "기술통계 표본 기준 충족", insufficient_sample: "표본 부족 · 지수 보류", complete_fixed_footprint: "고정거점 모두 관측", incomplete_fixed_footprint: "고정거점 관측 부족", low_effective_sample: "유효표본 부족 · 지수 보류", complete_descriptive_proxy: "필수 집계항목 관측 · 대리지수", held_missing_inputs: "필수 항목 부족 · 지수 보류" }[value] || value);
+export const qualityText = (value: string) => ({ adequate_descriptive_sample: "설문 결과를 요약할 응답 수 확보", insufficient_sample: "표본 부족 · 지수 보류", complete_fixed_footprint: "같은 관측장소의 자료 모두 확보", incomplete_fixed_footprint: "같은 관측장소의 자료 일부 부족", low_effective_sample: "응답 비중을 반영한 표본 수 부족 · 계산 보류", complete_descriptive_proxy: "필수 활동자료 확보 · 참고점수", held_missing_inputs: "필수 항목 부족 · 계산 보류" }[value] || value);
 export function researchColor(score: number | null) {
   if (score === null) return "#aab7c0";
   const fraction = Math.max(0, Math.min(100, score)) / 100;
