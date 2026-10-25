@@ -89,6 +89,27 @@ def settings(tmp_path):
     return Settings(final_model_bundle=activity, survey_area_bundle=survey)
 
 
+@pytest.mark.parametrize('params', [
+    {'region_code': '11680'},
+    {'level': 'administrative_dong', 'dong_code': '1168051000'},
+    {'province_code': '11', 'level': 'administrative_dong', 'limit': 1},
+])
+def test_survey_display_score_preserves_raw_evidence(settings, params):
+    with TestClient(create_app(settings)) as client:
+        response = client.get('/api/model/survey-area', params=params)
+        assert response.status_code == 200
+        payload = response.json()
+        row = payload['records'][0]
+        assert row['i5_display_score'] == pytest.approx(4.733643180377228)
+        assert row['i5_display_reference_version'] == 'i5_sgg_202512_equal_weight_v1'
+        assert payload['i5_display_reference_scope'] == '2025년 12월 시군구 기준 상대점수'
+        assert row['i5_display_clipped'] is False
+        assert row['isolation_index'] == row['i5_reference'] == 35
+        assert row['scale']['max'] == 100
+        assert row['domain_scores'] == {key: 35 for key in 'EPOCU'}
+        assert row['operational_alert_allowed'] is False
+
+
 def test_default_model_and_separate_legacy_routes(settings, monkeypatch):
     monkeypatch.delenv("APP_MODE", raising=False)
     assert Settings.from_env().mode == "final"

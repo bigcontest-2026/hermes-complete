@@ -2,6 +2,8 @@
 const HermiOverviewData = (() => {
   const domains = { E: '경제생활의 어려움', P: '모임·단체 참여 부족', O: '드문 외출', C: '가족·주변 사람과 교류 부족', U: '도움을 부탁할 관계 부족' };
   const finite = value => value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value));
+  const displayScore = row => finite(row?.i5_display_score) && Number(row.i5_display_score) >= 0 && Number(row.i5_display_score) <= 10
+    ? Number(row.i5_display_score) : null;
   function nonOverlapping(rows) {
     return rows.filter(row => !rows.some(parent => parent !== row && parent.area_code.slice(0, 2) === row.area_code.slice(0, 2)
       && row.area_name.startsWith(parent.area_name + ' ')));
@@ -13,11 +15,14 @@ const HermiOverviewData = (() => {
     const denominator = usable.reduce((sum, row) => sum + Number(row.population_20plus), 0);
     const weighted = field => completePopulation && denominator && usable.every(row => finite(field(row)))
       ? usable.reduce((sum, row) => sum + Number(field(row)) * Number(row.population_20plus), 0) / denominator : null;
+    // Average the unbounded server z values before clipping the regional summary.
+    const z = weighted(row => row.i5_z);
     return {
       count: rows.length, distinctCount: distinct.length,
       population_20plus: completePopulation ? denominator : null,
       population_total: distinct.every(row => finite(row.population_total)) ? distinct.reduce((sum, row) => sum + Number(row.population_total), 0) : null,
       i5_reference: weighted(row => row.i5_reference),
+      i5_display_score: z === null ? null : Math.max(0, Math.min(10, 5 + z)),
       domain_scores: Object.fromEntries(Object.keys(domains).map(key => [key, weighted(row => row.domain_scores?.[key])])),
     };
   }
@@ -202,7 +207,7 @@ const HermiOverviewData = (() => {
       return {...feature.properties,x,y,d:coordinates.map(ring=>ring.map((coordinate,index)=>`${index?'L':'M'}${point(coordinate).map(value=>value.toFixed(2)).join(',')}`).join('')+'Z').join('')};
     });
   }
-  return { domains, finite, nonOverlapping, aggregate, readAll, welfareLabels, periodLabel, periodText,
+  return { domains, finite, displayScore, nonOverlapping, aggregate, readAll, welfareLabels, periodLabel, periodText,
     readableValue, regionDetails, ageLabel, genderLabel, reviewLabel, conditionRows, businessPeriods, officialMetadata, sourceDateText, reportScopeForRegion, programForResponse, pathFrame, projectDistricts };
 
 })();
@@ -271,7 +276,7 @@ window.HERMI_OVERVIEW = (() => {
   function filteredRows() {
     return scopedRows().filter(row=>!state.search||`${provinceName(row.area_code.slice(0,2))} ${row.region_name||districtName(parentCode(row))} ${row.area_name}`.includes(state.search));
   }
-  const i5Color = value => !D.finite(value)?'#edf0f3':colors[Number(value)<30?0:Number(value)<33?1:Number(value)<35?2:Number(value)<37?3:4];
+  const i5Color = value => !D.finite(value)?'#edf0f3':colors[Number(value)<3?0:Number(value)<4?1:Number(value)<6?2:Number(value)<7?3:4];
   const selectedActivity = () => activitySummary(state.region || state.district || state.province, !state.region&&!state.district&&!!state.province);
 
   const activityCategories = {
@@ -298,15 +303,15 @@ window.HERMI_OVERVIEW = (() => {
   }
   function provinceMap() {
     const groups=Object.entries(PROVINCE_PREFIX).filter(([,code])=>!state.province||code===state.province)
-      .map(([name,code])=>({name,code,reference:D.aggregate(state.rows.filter(row=>row.area_code.startsWith(code))).i5_reference}));
+      .map(([name,code])=>({name,code,reference:D.displayScore(D.aggregate(state.rows.filter(row=>row.area_code.startsWith(code))))}));
     const visibleRows=scopedRows(),byCode=new Map(visibleRows.map(row=>[row.area_code,row]));
     const shapes=state.province?(state.boundaries||[]).filter(feature=>byCode.has(feature.properties.code)&&(!state.region||feature.properties.code===state.region)):[];
     const dongs=D.projectDistricts(shapes);
     let map;
     if(dongs.length) {
       const paths=dongs.map(({code,name,region_name,d})=>{
-        const row=byCode.get(code),label=`${region_name||row.region_name||''} ${name} · I5 ${number(row.i5_reference)} · 행정동 상세 보기`;
-        return `<path class="ho-map-region ${state.region===code?'active':''}" d="${d}" fill-rule="evenodd" fill="${i5Color(row.i5_reference)}" role="button" tabindex="0" data-ho-region="${esc(code)}" aria-label="${esc(label)}" aria-pressed="${state.region===code}"><title>${esc(label)}</title></path>`;
+        const row=byCode.get(code),label=`${region_name||row.region_name||''} ${name} · 지역 고립 지수 ${number(D.displayScore(row))} · 행정동 상세 보기`;
+        return `<path class="ho-map-region ${state.region===code?'active':''}" d="${d}" fill-rule="evenodd" fill="${i5Color(D.displayScore(row))}" role="button" tabindex="0" data-ho-region="${esc(code)}" aria-label="${esc(label)}" aria-pressed="${state.region===code}"><title>${esc(label)}</title></path>`;
       }).join('');
       const labels=dongs.length<=35?dongs.map(({code,name,x,y})=>`<text class="ho-district-label ${state.region===code?'active':''}" x="${x.toFixed(2)}" y="${y.toFixed(2)}">${esc(name)}</text>`).join(''):'';
       const name=state.rows.find(row=>row.area_code===state.region)?.area_name||districtName(state.district)||provinceName(state.province);
@@ -315,7 +320,7 @@ window.HERMI_OVERVIEW = (() => {
       map=`<div class="ho-map ho-boundary-empty" role="status"><h3>이 행정동의 지도 경계는 준비 중이에요.</h3><p>선택한 동의 I5와 인구구성은 오른쪽에서 확인할 수 있어요.</p>${state.boundaryError?'<button type="button" class="btn" data-ho-retry-map>경계 다시 불러오기</button>':''}</div>`;
     } else {
       const viewBox=state.province?D.pathFrame(provPaths[groups[0]?.name]).viewBox:'135 10 325 535';
-      const paths=groups.map(({name,code,reference})=>`<path class="ho-map-region" d="${provPaths[name]}" fill="${i5Color(reference)}" role="button" tabindex="0" data-ho-province="${code}" aria-label="${esc(name)} · 행정동 지도 열기"><title>${esc(name)} · 행정동 I5 인구가중 참고값 ${number(reference)}</title></path>`).join('');
+      const paths=groups.map(({name,code,reference})=>`<path class="ho-map-region" d="${provPaths[name]}" fill="${i5Color(reference)}" role="button" tabindex="0" data-ho-province="${code}" aria-label="${esc(name)} · 행정동 지도 열기"><title>${esc(name)} · 행정동 지역 고립 지수 인구가중 참고값 ${number(reference)}</title></path>`).join('');
       const labels=state.province?'':groups.map(({name,code})=>{
         const frame=D.pathFrame(provPaths[name]),position=typeof PROVINCE_MAP!=='undefined'?PROVINCE_MAP.find(item=>item[0]===name):null;
         let x=position?.[1]??frame.x,y=position?.[2]??frame.y;if(code==='11'){x=183;y=96;}if(code==='28'){x=157;y=141;}
@@ -328,7 +333,7 @@ window.HERMI_OVERVIEW = (() => {
     const shortcuts=!state.province?`<div class="ho-map-shortcuts" aria-label="행정동 바로 탐색">${provided.map(code=>`<button type="button" data-ho-district="${esc(code)}"><span>${esc(provinceName(code.slice(0,2)))}</span><b>${esc(districtName(code))} 행정동</b><span aria-hidden="true">↗</span></button>`).join('')}</div>`:'';
     const boundaryCodes=new Set((state.boundaries||[]).map(feature=>feature.properties.code));
     const missing=state.boundaries&&state.province?visibleRows.filter(row=>!boundaryCodes.has(row.area_code)).length:0;
-    return `${shortcuts}${map}${state.province?'<p class="ho-map-source">경계: 통계청 SGIS / <a href="https://github.com/vuski/admdongkor/tree/master/ver20250701" target="_blank" rel="noopener noreferrer">vuski/admdongkor</a> · 2025년 7월 · 단순화 · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a></p>':''}<div class="ho-map-legend ho-i5-legend">${colors.map((color,index)=>`<span><i style="background:${color}"></i>${['30 미만','30–33','33–35','35–37','37 이상'][index]}</span>`).join('')}</div>${missing?`<p class="ho-map-caption">경계 미연결 ${missing}개 동·출장소는 목록에서 조회할 수 있어요.</p>`:''}`;
+    return `${shortcuts}${map}${state.province?'<p class="ho-map-source">경계: 통계청 SGIS / <a href="https://github.com/vuski/admdongkor/tree/master/ver20250701" target="_blank" rel="noopener noreferrer">vuski/admdongkor</a> · 2025년 7월 · 단순화 · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a></p>':''}<div class="ho-map-legend ho-i5-legend">${colors.map((color,index)=>`<span><i style="background:${color}"></i>${['3 미만','3–4','4–6','6–7','7 이상'][index]}</span>`).join('')}</div>${missing?`<p class="ho-map-caption">경계 미연결 ${missing}개 동·출장소는 목록에서 조회할 수 있어요.</p>`:''}`;
   }
   function districtSelect() {
     if(!state.province)return '';
@@ -355,7 +360,7 @@ window.HERMI_OVERVIEW = (() => {
   }
   function regionRows() {
     const rows=filteredRows().sort((a,b)=>(a.region_name||'').localeCompare(b.region_name||'','ko')||a.area_name.localeCompare(b.area_name,'ko'));
-    return rows.length?rows.map(row=>`<button type="button" class="ho-region-row ${state.region===row.area_code?'active':''}" data-ho-region="${esc(row.area_code)}" aria-pressed="${state.region===row.area_code}"><span><b>${esc(row.area_name)}</b><small>${esc(provinceName(row.area_code.slice(0,2)))} ${esc(row.region_name||districtName(parentCode(row)))}</small></span><strong class="ho-dong-i5"><small>지역 고립 지수</small>${number(row.i5_reference)}</strong></button>`).join(''):'<div class="ho-empty">검색한 행정동이 없어요.</div>';
+    return rows.length?rows.map(row=>`<button type="button" class="ho-region-row ${state.region===row.area_code?'active':''}" data-ho-region="${esc(row.area_code)}" aria-pressed="${state.region===row.area_code}"><span><b>${esc(row.area_name)}</b><small>${esc(provinceName(row.area_code.slice(0,2)))} ${esc(row.region_name||districtName(parentCode(row)))}</small></span><strong class="ho-dong-i5"><small>지역 고립 지수</small>${number(D.displayScore(row))}</strong></button>`).join(''):'<div class="ho-empty">검색한 행정동이 없어요.</div>';
   }
   function activityReference(summary,parentName) {
     const active=summary.records.find(item=>item.activity_assessment.category===summary.category);
@@ -367,7 +372,7 @@ window.HERMI_OVERVIEW = (() => {
     const row=state.rows.find(item=>item.area_code===state.region);
     if(!row)return `<div class="ho-detail-title"><span>행정동 상세</span><h2>${esc(districtName(state.district)||provinceName(state.province)||'행정동을 선택해 주세요')}</h2></div><p class="ho-score-caption">지도나 목록에서 동을 누르면 해당 동의 I5·인구구성과 상위 시군구 활동을 함께 확인할 수 있어요.</p><div class="ho-detail-actions"><button type="button" class="btn" data-ho-select-guide>행정동 검색하기</button></div>`;
     const domains=Object.entries(D.domains).map(([key,label])=>`<div class="ho-domain-row"><div><span>${esc(label)}</span><strong>${number(row.domain_scores?.[key])}</strong></div><div class="ho-domain-track"><i style="width:${D.finite(row.domain_scores?.[key])?Math.min(100,Math.max(0,Number(row.domain_scores[key]))):0}%"></i></div></div>`).join('');
-    return `<div class="ho-detail-title"><span>${esc(provinceName(row.area_code.slice(0,2)))} ${esc(row.region_name||districtName(parentCode(row)))}</span><h2>${esc(row.area_name)}</h2></div><div class="ho-score">${number(row.i5_reference)}<small>/100</small></div><p class="ho-score-caption">지역 고립 지수</p><div class="ho-domains">${domains}</div><p class="ho-domain-key">전국 설문 결과를 이 동의 20세 이상 인구구성으로 가중한 참고값입니다.</p><div class="ho-population"><div><small>전체 인구</small><strong>${number(row.population_total,0)}명</strong></div><div><small>20세 이상 인구</small><strong>${number(row.population_20plus,0)}명</strong></div></div>${activityReference(selectedActivity(),row.region_name||districtName(parentCode(row)))}<div class="ho-detail-actions"><button type="button" class="btn primary" data-ho-ask-region="${esc(row.area_code)}">헤르미와 이 행정동 분석하기</button><button type="button" class="btn" data-ho-dong-welfare="${esc(row.area_code)}">이 행정동의 복지 보기</button><button type="button" class="btn" data-ho-open-reports="${esc(row.area_code)}">이 행정동의 보고서 보기</button></div>`;
+    return `<div class="ho-detail-title"><span>${esc(provinceName(row.area_code.slice(0,2)))} ${esc(row.region_name||districtName(parentCode(row)))}</span><h2>${esc(row.area_name)}</h2></div><div class="ho-score">${number(D.displayScore(row))}<small>/10</small></div><p class="ho-score-caption">지역 고립 지수</p><div class="ho-domains">${domains}</div><p class="ho-domain-key">전국 설문 결과를 이 동의 20세 이상 인구구성으로 가중한 참고값입니다.</p><div class="ho-population"><div><small>전체 인구</small><strong>${number(row.population_total,0)}명</strong></div><div><small>20세 이상 인구</small><strong>${number(row.population_20plus,0)}명</strong></div></div>${activityReference(selectedActivity(),row.region_name||districtName(parentCode(row)))}<div class="ho-detail-actions"><button type="button" class="btn primary" data-ho-ask-region="${esc(row.area_code)}">헤르미와 이 행정동 분석하기</button><button type="button" class="btn" data-ho-dong-welfare="${esc(row.area_code)}">이 행정동의 복지 보기</button><button type="button" class="btn" data-ho-open-reports="${esc(row.area_code)}">이 행정동의 보고서 보기</button></div>`;
   }
   function askRegion(row,purpose='고립 참고점수와 활동 변화를 분석해 줘') {
     if(!row)return;
@@ -451,7 +456,7 @@ window.HERMI_OVERVIEW = (() => {
       <div class="ho-dashboard-grid"><section class="ho-region-list"><div class="ho-card-head"><h2>행정동 목록</h2><span>${filteredRows().length}개</span></div><label class="ho-search"><span class="ho-sr-only">행정동 검색</span><input type="search" data-ho-search value="${esc(state.search)}" placeholder="행정동·읍면 이름 검색"></label><div class="ho-region-scroll">${regionRows()}</div></section>
       <section class="ho-map-panel"><div class="ho-card-head"><div><h2>${esc(title)}${row?' 상세 지도':state.province?' 행정동 지도':' 지도'}</h2><p>${row?'선택한 행정동의 경계를 크게 보여드려요.':state.province?'동을 누르면 해당 행정동만 확대해 볼 수 있어요.':'시도를 누르거나 지역 바로 보기를 선택하세요.'}</p></div>${state.province?'<button type="button" class="btn" data-ho-province="">전국 보기</button>':''}</div>${mapNavigation()}${districtSelect()}${provinceMap()}</section>
       <section class="ho-region-detail" aria-label="선택 행정동 상세">${detail()}</section></div>
-      <details class="ho-note"><summary>행정동 자료는 어떻게 표시하나요?</summary><p>지도 색과 목록의 I5는 해당 행정동의 20세 이상 인구구성에 전국 설문 결과를 가중한 참고지수입니다. 개인 고립 확률이나 직접 조사한 동별 고립률은 아닙니다.</p><p>통신·카드 활동은 상위 시군구의 실제 관측집단을 함께 표시합니다. 같은 시군구의 여러 행정동을 조회해도 활동 관측 수를 중복해서 세지 않습니다. 경계가 연결되지 않은 동·출장소도 목록과 상세 자료를 조회할 수 있습니다.</p></details>`;
+      <details class="ho-note"><summary>행정동 자료는 어떻게 표시하나요?</summary><p>지도 색과 목록의 지역 고립 지수는 2025년 12월 시군구 기준 평균을 5점으로 맞춘 0~10점 값입니다. 해당 행정동의 20세 이상 인구구성에 전국 설문 결과를 가중한 원점수를 같은 기준으로 변환합니다. 개인 고립 확률이나 직접 조사한 동별 고립률은 아닙니다.</p><p>통신·카드 활동은 상위 시군구의 실제 관측집단을 함께 표시합니다. 같은 시군구의 여러 행정동을 조회해도 활동 관측 수를 중복해서 세지 않습니다. 경계가 연결되지 않은 동·출장소도 목록과 상세 자료를 조회할 수 있습니다.</p></details>`;
   }
   async function loadDashboard() {
     const token = ++serial;
